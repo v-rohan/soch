@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from .serializers import RegistrationSerializer
+from .broadcast import broadcast_sms
 # Create your views here.
 
 
@@ -17,5 +18,6 @@ def registration_view(request):
         data['response'] = "User Registered Successfully"
         data['user'] = user.username
         data['token'] = Token.objects.get(user=user).key
+        # broadcast_sms([user.username], "Successfully registered on soch")
         return Response(data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
