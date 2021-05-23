@@ -2,6 +2,7 @@ from django.shortcuts import render
 from requests.models import Response
 from rest_framework import views, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -12,6 +13,7 @@ from soch.settings import AAROGRA_SETU_API
 headers = {"accept": "application/json"}
 
 class AppSessionViewSet(viewsets.ViewSet):
+    permission_classes = (AllowAny)
 
     @action(detail=False, methods=['POST'])
     def getByPin(self, request):
@@ -30,7 +32,7 @@ class AppSessionViewSet(viewsets.ViewSet):
     
     @action(detail=False, methods=['POST'])
     def getByDistrict(self, request):
-        district_id = request.data.get('pincode')
+        district_id = request.data.get('district')
         date = datetime.date.fromisoformat(request.data.get('date', None)).strftime("%d-%m-%Y") if request.data.get('date', None) is not None else None
         params = {"district_id": district_id, "date": date}
         if request.data.get('calendar', False):
@@ -64,3 +66,11 @@ class MetaDataViewSet(viewsets.ViewSet):
         else:
             print(r.status_code)
             return Response({"detail": "Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=["GET"])
+    def getDistricts(self, request):
+        state_id = request.data.get('state')
+        r = requests.get(f"{AAROGRA_SETU_API}/v2/admin/location/districts", params={'state_id': state_id}, headers=headers)
+        if r.status_code == 200:
+            return Response({'data': r.json()})
+        return Response({"detail": "Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
