@@ -1,3 +1,7 @@
 venv
-*/pycache
+*/__pycache__
 */migrations
+.vscode
+db.sqlite3
+*.pyc
+*.log
