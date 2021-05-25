@@ -2,6 +2,10 @@ from .models import ReferrerId
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import JsonResponse
+from soch.celery import sms_scheduler, revoke_task
+from django.utils import timezone
+from datetime import timedelta
+from soch.settings import STATUS_CHECK_TIMEOUT
 
 
 class TaskMiddleWare():
@@ -10,26 +14,30 @@ class TaskMiddleWare():
 
     def __call__(self, request):
         response = self.get_response(request)
+        if 'admin' not in request.path_info:
+            try:
+                response['Task-Id'] = request.META["HTTP_TASK_ID"]
+            except Exception:
+                pass
         return response
     
     def process_view(self, request, view_func, view_args, view_kwargs):
         if 'admin' in request.path_info:
             return None
         try:
-            # print(request.META)
             referrer_id = request.META['HTTP_REFERRER_ID']
         except Exception:
             return JsonResponse({'detail': 'No REFERRER_ID'}, status=status.HTTP_400_BAD_REQUEST)
         if referrer_id:
-            try:
-                user = ReferrerId.objects.get(referrer_id=referrer_id).user
-                if request.path_info != '':
-                    # TODO ADD REQUEST ENTRY TO TASK QUEUE
-                    pass
-                else:
-                    #TODO REMOVE ENTRY FROM TASK QUEUE
-                    pass
-                return None
-            except Exception:
-                return JsonResponse({'detail': 'No REFERRER_ID'}, status=status.HTTP_400_BAD_REQUEST)
+            user = ReferrerId.objects.get(referrer_id=referrer_id).user
+            request.user = user
+            if 'recieved' not in request.path_info:
+                now = timezone.now()
+                exec_time = now + timedelta(seconds=STATUS_CHECK_TIMEOUT)
+                task = sms_scheduler.apply_async(({
+                    'user': request.user.pk,
+                    'path_info': request.path_info
+                }, ), eta=exec_time)
+                request.META["HTTP_TASK_ID"] = task.id
+            return None
 

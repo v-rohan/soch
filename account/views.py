@@ -9,7 +9,7 @@ from .broadcast import broadcast_sms
 import requests
 from .models import CowinData
 import hashlib
-
+from soch.celery import revoke_task
 
 @api_view(['POST'])
 @permission_classes((AllowAny,))
@@ -58,3 +58,14 @@ def get_token(otp, user):
             usrdata.save()
         return True
     return False
+
+
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def delete_task(request):
+    try:
+        task_id = request.data.get('taskId')
+    except Exception:
+        return Response({'detail': 'No TASK_ID'}, status=status.HTTP_400_BAD_REQUEST)
+    revoke_task(task_id)
+    return Response({'detail': 'OK'}, status=status.HTTP_200_OK)
