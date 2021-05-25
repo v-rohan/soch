@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from requests.models import Response
+# from requests.models import Response
 from rest_framework import views, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -13,7 +13,7 @@ from soch.settings import AAROGRA_SETU_API
 headers = {"accept": "application/json"}
 
 class AppSessionViewSet(viewsets.ViewSet):
-    permission_classes = (AllowAny)
+    # permission_classes = (AllowAny)
 
     @action(detail=False, methods=['POST'])
     def getByPin(self, request):

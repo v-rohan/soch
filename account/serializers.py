@@ -1,9 +1,11 @@
 from django.db import models
+from django.db.models.fields import IntegerField
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
+    username = IntegerField(max_length=12)
     password2 = serializers.CharField(
         style={'input_type': 'password'}, write_only=True)
 

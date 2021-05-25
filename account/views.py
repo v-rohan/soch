@@ -26,6 +26,8 @@ def registration_view(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['POST'])
+@permission_classes((AllowAny,))
 def request_otp(number, user):
     if number:
         r = requests.post(f'{AAROGRA_SETU_API}/v2/auth/public/generateOTP/', data={'number': number})
@@ -40,13 +42,15 @@ def request_otp(number, user):
             return True
     return False
 
-def get_token(otp, user):
 
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def get_token(otp, user):
     if user and otp:
         usrdata = CowinData.objects.get(user=user)
         data = {
             'txnId': usrdata.txnId,
-            'otp': hashlib.sha256(otp.encode())
+            'otp': hashlib.sha256(otp.encode()).hexdigest()
         }
         r = requests.post(f'{AAROGRA_SETU_API}/v2/auth/public/confirmOTP', data=data)
         if r.status_code == 200:
