@@ -10,7 +10,10 @@ import requests
 import datetime
 
 from soch.settings import AAROGRA_SETU_API
-headers = {"accept": "application/json"}
+headers = {
+    "accept": "application/json",
+    "apiKey": "3sjOr2rmM52GzhpMHjDEE1kpQeRxwFDr4YcBEimi"
+    }
 
 class AppSessionViewSet(viewsets.ViewSet):
     # permission_classes = (AllowAny)
@@ -20,11 +23,13 @@ class AppSessionViewSet(viewsets.ViewSet):
         pincode = (request.data.get('pincode'))
         date = datetime.date.fromisoformat(request.data.get('date', None)).strftime("%d-%m-%Y") if request.data.get('date', None) is not None else None
         params = {"pincode": pincode, "date": date}
+        print(params)
         if request.data.get('calendar', False):
             time = "calendar"
         else :
             time = "find"
         r = requests.get(f'{AAROGRA_SETU_API}/v2/appointment/sessions/public/{time}ByPin', params=params, headers=headers)
+        print(r)
         if r.status_code == 200:
             return Response({"data": r.json()})
         else:

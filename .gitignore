@@ -6,3 +6,5 @@ db.sqlite3
 *.pyc
 *.log
 .env
+dump.rdb
+celerybeat-schedule

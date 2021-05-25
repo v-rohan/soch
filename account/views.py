@@ -11,6 +11,7 @@ from .broadcast import broadcast_sms
 import requests
 from .models import CowinData
 import hashlib
+from soch.celery import revoke_task
 
 
 @api_view(['POST'])
@@ -73,3 +74,14 @@ def receive_otp(otp, mobile):
             get_token(otp, user)
         return Response({"error": "OTP Expired, regenerate OPT"}, status=status.HTTP_401_UNAUTHORIZED)
     return Response({"error": "Provide otp and mobile"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def delete_task(request):
+    try:
+        task_id = request.data.get('taskId')
+    except Exception:
+        return Response({'detail': 'No TASK_ID'}, status=status.HTTP_400_BAD_REQUEST)
+    revoke_task(task_id)
+    return Response({'detail': 'OK'}, status=status.HTTP_200_OK)
