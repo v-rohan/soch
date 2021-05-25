@@ -1,4 +1,6 @@
+import datetime
 from soch.settings import AAROGRA_SETU_API
+from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -30,7 +32,8 @@ def registration_view(request):
 @permission_classes((AllowAny,))
 def request_otp(number, user):
     if number:
-        r = requests.post(f'{AAROGRA_SETU_API}/v2/auth/public/generateOTP/', data={'number': number})
+        r = requests.post(
+            f'{AAROGRA_SETU_API}/v2/auth/public/generateOTP/', data={'number': number})
         if r.status_code == 200:
             txnId = r.json()["txnId"]
             try:
@@ -38,13 +41,12 @@ def request_otp(number, user):
                 usrdata.txnId = txnId
             except:
                 usrdata = CowinData(user=user, txnId=txnId)
+                usrdata.expiration_time = datetime.datetime.now() + datetime.timedelta(minutes=3)
             usrdata.save()
             return True
     return False
 
 
-@api_view(['POST'])
-@permission_classes((AllowAny,))
 def get_token(otp, user):
     if user and otp:
         usrdata = CowinData.objects.get(user=user)
@@ -52,9 +54,22 @@ def get_token(otp, user):
             'txnId': usrdata.txnId,
             'otp': hashlib.sha256(otp.encode()).hexdigest()
         }
-        r = requests.post(f'{AAROGRA_SETU_API}/v2/auth/public/confirmOTP', data=data)
+        r = requests.post(
+            f'{AAROGRA_SETU_API}/v2/auth/public/confirmOTP', data=data)
         if r.status_code == 200:
             usrdata.token = r.json()['token']
             usrdata.save()
         return True
     return False
+
+
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def receive_otp(otp, mobile):
+    if mobile and otp:
+        user = User.objects.get(username=mobile)
+        user_data = CowinData.objects.get(user=user)
+        if user_data.expiration_time > datetime.datetime.now():
+            get_token(otp, user)
+        return Response({"error": "OTP Expired, regenerate OPT"}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response({"error": "Provide otp and mobile"}, status=status.HTTP_400_BAD_REQUEST)
