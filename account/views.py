@@ -1,5 +1,5 @@
 import datetime
-from soch.settings import AAROGRA_SETU_API
+from soch.settings import AAROGRA_SETU_API, AAROGYA_SETU_API_KEY, AAROGRA_SETU_API_PRODUCTION
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -7,11 +7,18 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import RegistrationSerializer
-from .broadcast import broadcast_sms
+from .twilio import broadcast_sms, check_verification, start_verification
 import requests
 from .models import CowinData
 import hashlib
 from soch.celery import revoke_task
+import json
+
+
+headers = {
+    'accept': 'application/json',
+    'Content-Type': 'application/json',
+}
 
 
 @api_view(['POST'])
@@ -24,6 +31,7 @@ def registration_view(request):
         data['response'] = "User Registered Successfully"
         data['user'] = user.username
         data['token'] = Token.objects.get(user=user).key
+        start_verification(user.username)
         # broadcast_sms([user.username], "Successfully registered on soch")
         return Response(data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -31,21 +39,40 @@ def registration_view(request):
 
 @api_view(['POST'])
 @permission_classes((AllowAny,))
-def request_otp(number, user):
+def verify_account(request):
+    code = request.data.get('code')
+    mobile = request.data.get('mobile')
+    if code and mobile:
+        res = check_verification(mobile, code)
+        print(res)
+        broadcast_sms(mobile, "Successfully registered on soch")
+        return Response({"msg": res})
+    return Response({"error": "provide mobile and code"})
+
+
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def request_otp(request):
+    number = request.data.get('number')
     if number:
-        r = requests.post(
-            f'{AAROGRA_SETU_API}/v2/auth/public/generateOTP/', data={'number': number})
+        url = f"{AAROGRA_SETU_API_PRODUCTION}/v2/auth/public/generateOTP/"
+        r = requests.post(url, headers=headers,
+                          data=json.dumps({'mobile': number}))
+
         if r.status_code == 200:
             txnId = r.json()["txnId"]
             try:
+                user = User.objects.get(username=number)
                 usrdata = CowinData.objects.get(user=user)
                 usrdata.txnId = txnId
             except:
-                usrdata = CowinData(user=user, txnId=txnId)
-                usrdata.expiration_time = datetime.datetime.now() + datetime.timedelta(minutes=3)
+                usrdata = CowinData(user=user.objects.get(
+                    username=number), txnId=txnId)
+            usrdata.expiration_time = datetime.datetime.now() + datetime.timedelta(minutes=3)
             usrdata.save()
-            return True
-    return False
+            return Response({"msg": "OTP sent successfully, pls enter the OTP"}, status=status.HTTP_200_OK)
+        return Response({"error": r.text})
+    return Response({"error": "Please provide mobile number"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def get_token(otp, user):

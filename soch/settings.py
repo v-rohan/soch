@@ -135,8 +135,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # COWIN Test Server
 AAROGRA_SETU_API = 'https://cdndemo-api.co-vin.in/api'
 
+# COWIN TEST SERVER API KEY
+AAROGYA_SETU_API_KEY = '3sjOr2rmM52GzhpMHjDEE1kpQeRxwFDr4YcBEimi'
+
 # COWIN Production Server
-# AAROGRA_SETU_API = 'https://cdn-api.co-vin.in/api'
+AAROGRA_SETU_API_PRODUCTION = 'https://cdn-api.co-vin.in/api'
 
 # REST_FRAMEWORK = {
 #     'DEFAULT_PERMISSION_CLASSES': [
@@ -160,13 +163,14 @@ REST_FRAMEWORK = {
 TWILIO_ACCOUNT_SID = config("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = config("TWILIO_AUTH_TOKEN")
 TWILIO_NUMBER = config("TWILIO_NUMBER")
+TWILIO_SERVICE_SID = config('TWILIO_SERVICE_SID')
 
 
-# celery 
+# celery
 BROKER_URL = 'redis://localhost:6379'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Kolkata'
-STATUS_CHECK_TIMEOUT = 15 # In Seconds
+STATUS_CHECK_TIMEOUT = 15  # In Seconds

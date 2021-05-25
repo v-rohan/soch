@@ -14,15 +14,15 @@ class TaskMiddleWare():
 
     def __call__(self, request):
         response = self.get_response(request)
-        if 'admin' not in request.path_info:
+        if 'recieved' in request.path_info:
             try:
                 response['Task-Id'] = request.META["HTTP_TASK_ID"]
             except Exception:
                 pass
         return response
-    
+
     def process_view(self, request, view_func, view_args, view_kwargs):
-        if 'admin' in request.path_info:
+        if 'admin' in request.path_info or 'login' in request.path_info or 'register' in request.path_info:
             return None
         try:
             referrer_id = request.META['HTTP_REFERRER_ID']
@@ -40,4 +40,3 @@ class TaskMiddleWare():
                 }, ), eta=exec_time)
                 request.META["HTTP_TASK_ID"] = task.id
             return None
-

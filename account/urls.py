@@ -7,5 +7,7 @@ app_name = "account"
 urlpatterns = [
     path('register/', views.registration_view, name='register'),
     path('login/', obtain_auth_token, name='login'),
-    path('recieved/', views.delete_task)
+    path('recieved/', views.delete_task),
+    path('requestotp/', views.request_otp),
+    path('verify/', views.verify_account)
 ]
