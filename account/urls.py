@@ -9,5 +9,5 @@ urlpatterns = [
     path('login/', obtain_auth_token, name='login'),
     path('recieved/', views.delete_task),
     path('requestotp/', views.request_otp),
-    path('verify/', views.verify_account)
+    path('submitotp/', views.submit_otp)
 ]

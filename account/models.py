@@ -28,3 +28,4 @@ class CowinData(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     expiration_time = models.DateTimeField(default=timezone.now())
     token = models.TextField(blank=True)
+    beneficiary_reference_id = models.CharField(max_length=13, blank=True)

@@ -37,42 +37,38 @@ def registration_view(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-@permission_classes((AllowAny,))
-def verify_account(request):
-    code = request.data.get('code')
-    mobile = request.data.get('mobile')
-    if code and mobile:
-        res = check_verification(mobile, code)
-        print(res)
-        broadcast_sms(mobile, "Successfully registered on soch")
-        return Response({"msg": res})
-    return Response({"error": "provide mobile and code"})
+# @api_view(['POST'])
+# @permission_classes((AllowAny,))
+# def verify_account(request):
+#     code = request.data.get('code')
+#     mobile = request.data.get('mobile')
+#     if code and mobile:
+#         res = check_verification(mobile, code)
+#         print(res)
+#         broadcast_sms(mobile, "Successfully registered on soch")
+#         return Response({"msg": res})
+#     return Response({"error": "provide mobile and code"})
 
 
 @api_view(['POST'])
-@permission_classes((AllowAny,))
+@permission_classes((IsAuthenticated,))
 def request_otp(request):
-    number = request.data.get('number')
-    if number:
-        url = f"{AAROGRA_SETU_API_PRODUCTION}/v2/auth/public/generateOTP/"
-        r = requests.post(url, headers=headers,
-                          data=json.dumps({'mobile': number}))
+    number = request.user.username
+    url = f"{AAROGRA_SETU_API}/v2/auth/public/generateOTP/"
+    r = requests.post(url, headers=headers,
+                      data=json.dumps({'mobile': number}))
 
-        if r.status_code == 200:
-            txnId = r.json()["txnId"]
-            try:
-                user = User.objects.get(username=number)
-                usrdata = CowinData.objects.get(user=user)
-                usrdata.txnId = txnId
-            except:
-                usrdata = CowinData(user=user.objects.get(
-                    username=number), txnId=txnId)
-            usrdata.expiration_time = datetime.datetime.now() + datetime.timedelta(minutes=3)
-            usrdata.save()
-            return Response({"msg": "OTP sent successfully, pls enter the OTP"}, status=status.HTTP_200_OK)
-        return Response({"error": r.text})
-    return Response({"error": "Please provide mobile number"}, status=status.HTTP_400_BAD_REQUEST)
+    if r.status_code == 200:
+        txnId = r.json()["txnId"]
+        try:
+            usrdata = CowinData.objects.get(user=request.user)
+            usrdata.txnId = txnId
+        except:
+            usrdata = CowinData(user=request.user, txnId=txnId)
+        usrdata.expiration_time = datetime.datetime.now() + datetime.timedelta(minutes=3)
+        usrdata.save()
+        return Response({"msg": "Pls enter the OTP"}, status=status.HTTP_200_OK)
+    return Response({"error": r.status_code})
 
 
 def get_token(otp, user):
@@ -87,20 +83,20 @@ def get_token(otp, user):
         if r.status_code == 200:
             usrdata.token = r.json()['token']
             usrdata.save()
-        return True
-    return False
+            return Response({"msg": "OTP verification successful"}, status=status.HTTP_200_OK)
+        return Response({"error": "Incorrect OTP provided. Try again"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
-@permission_classes((AllowAny,))
-def receive_otp(otp, mobile):
-    if mobile and otp:
-        user = User.objects.get(username=mobile)
-        user_data = CowinData.objects.get(user=user)
+@permission_classes((IsAuthenticated,))
+def submit_otp(request):
+    otp = request.data.get('otp')
+    if otp:
+        user_data = CowinData.objects.get(user=request.user)
         if user_data.expiration_time > datetime.datetime.now():
-            get_token(otp, user)
+            get_token(otp, request.user)
         return Response({"error": "OTP Expired, regenerate OPT"}, status=status.HTTP_401_UNAUTHORIZED)
-    return Response({"error": "Provide otp and mobile"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"error": "Provide otp"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
