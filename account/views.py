@@ -31,8 +31,8 @@ def registration_view(request):
         data['response'] = "User Registered Successfully"
         data['user'] = user.username
         data['token'] = Token.objects.get(user=user).key
-        start_verification(user.username)
-        # broadcast_sms([user.username], "Successfully registered on soch")
+        # start_verification(user.username)
+        broadcast_sms([user.username], "Successfully registered on soch")
         return Response(data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
