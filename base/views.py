@@ -93,6 +93,14 @@ class MetaDataViewSet(viewsets.ViewSet):
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))
 def register_benificiary(request):
-    bearer_token = CowinData.objects.get(user=request.user).token
+    user = CowinData.objects.get(user=request.user)
+    bearer_token = user.token
     headers['Authorization'] = f"Bearer {bearer_token}"
     data = request.data
+    url = f"{AAROGRA_SETU_API}/v2/registration/beneficiary/new"
+    r = requests.post(url, headers=headers, data=json.dumps(data))
+    if r.status_code == 200:
+        user.beneficiary_reference_id = r.json()['beneficiary_reference_id']
+        user.save()
+        return Response(status=status.HTTP_200_OK)
+    return Response({"error": r.status_code}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

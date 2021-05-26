@@ -13,11 +13,13 @@ from .models import CowinData
 import hashlib
 from soch.celery import revoke_task
 import json
-
+from django.utils import timezone
 
 headers = {
     'accept': 'application/json',
     'Content-Type': 'application/json',
+    'x-api-key': AAROGYA_SETU_API_KEY,
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
 }
 
 
@@ -54,7 +56,7 @@ def registration_view(request):
 @permission_classes((IsAuthenticated,))
 def request_otp(request):
     number = request.user.username
-    url = f"{AAROGRA_SETU_API}/v2/auth/public/generateOTP/"
+    url = f"{AAROGRA_SETU_API}/v2/auth/public/generateOTP"
     r = requests.post(url, headers=headers,
                       data=json.dumps({'mobile': number}))
 
@@ -65,7 +67,7 @@ def request_otp(request):
             usrdata.txnId = txnId
         except:
             usrdata = CowinData(user=request.user, txnId=txnId)
-        usrdata.expiration_time = datetime.datetime.now() + datetime.timedelta(minutes=3)
+        usrdata.expiration_time = timezone.now() + datetime.timedelta(minutes=3)
         usrdata.save()
         return Response({"msg": "Pls enter the OTP"}, status=status.HTTP_200_OK)
     return Response({"error": r.status_code})
@@ -79,7 +81,7 @@ def get_token(otp, user):
             'otp': hashlib.sha256(otp.encode()).hexdigest()
         }
         r = requests.post(
-            f'{AAROGRA_SETU_API}/v2/auth/public/confirmOTP', data=data)
+            f'{AAROGRA_SETU_API}/v2/auth/public/confirmOTP', data=json.dumps(data))
         if r.status_code == 200:
             usrdata.token = r.json()['token']
             usrdata.save()
@@ -93,10 +95,10 @@ def submit_otp(request):
     otp = request.data.get('otp')
     if otp:
         user_data = CowinData.objects.get(user=request.user)
-        if user_data.expiration_time > datetime.datetime.now():
+        if user_data.expiration_time > timezone.now():
             get_token(otp, request.user)
-        return Response({"error": "OTP Expired, regenerate OPT"}, status=status.HTTP_401_UNAUTHORIZED)
-    return Response({"error": "Provide otp"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "OTP Expired, regenerate OTP"}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response({"error": "OTP not provided"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
