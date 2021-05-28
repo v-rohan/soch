@@ -1,4 +1,4 @@
-from rest_framework import views, viewsets
+from rest_framework import viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -103,4 +103,44 @@ def register_benificiary(request):
         user.beneficiary_reference_id = r.json()['beneficiary_reference_id']
         user.save()
         return Response(status=status.HTTP_200_OK)
-    return Response({"error": r.status_code}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return Response({"detail": f"Error: {r.status_code}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def book_appointment(request):
+    user = CowinData.objects.get(user=request.user)
+    dose = request.data.get('dose')
+    slot = request.data.get('slot')
+    session_id = request.data.get('session')
+    if dose and session_id and slot:
+
+        if user.appointment_id_2:
+            return Response({'detail': 'Already Vaccinated'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if dose == 1 and user.appointment_id_1:
+            return Response({'detail': 'Already Vaccinated for Dose 1'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if dose == 2 and not user.appointment_id_1:
+            return Response({'detail': 'First Register for Dose 1'}, status=status.HTTP_400_BAD_REQUEST)
+
+        headers['Authorization'] = f"Bearer {user.token}"
+        url = f"{AAROGRA_SETU_API}/v2/appointment/schedule"
+        data = {
+            'dose': dose,
+            'session_id': session_id,
+            'slot': slot,
+            'benificiaries': [user.beneficiary_reference_id]
+        }
+        r = requests.post(url, headers=headers, data=json.dumps(data))
+        if r.status_code == 200:
+            if dose == 1:
+                user.appointment_id_1 = r.json()['appointment_id']
+            else:
+                user.appointment_id_2 = r.json()['appointment_id']
+            user.save()
+
+            return Response({'detail': f'Booking Successful for dose {dose}'}, status=status.HTTP_200_OK)
+        return Response({"error": r.status_code}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({'detail': 'Provide the necessary details'}, status=status.HTTP_400_BAD_REQUEST)

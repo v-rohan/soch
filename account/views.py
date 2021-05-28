@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import RegistrationSerializer
-from .twilio import broadcast_sms, check_verification, start_verification
+from .twilio import broadcast_sms
 import requests
 from .models import CowinData
 import hashlib
@@ -33,26 +33,12 @@ def registration_view(request):
         data['response'] = "User Registered Successfully"
         data['user'] = user.username
         data['token'] = Token.objects.get(user=user).key
-        # start_verification(user.username)
         broadcast_sms([user.username], "Successfully registered on soch")
         return Response(data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# @api_view(['POST'])
-# @permission_classes((AllowAny,))
-# def verify_account(request):
-#     code = request.data.get('code')
-#     mobile = request.data.get('mobile')
-#     if code and mobile:
-#         res = check_verification(mobile, code)
-#         print(res)
-#         broadcast_sms(mobile, "Successfully registered on soch")
-#         return Response({"msg": res})
-#     return Response({"error": "provide mobile and code"})
-
-
-@api_view(['POST'])
+@api_view(['GET'])
 @permission_classes((IsAuthenticated,))
 def request_otp(request):
     number = request.user.username
@@ -69,8 +55,8 @@ def request_otp(request):
             usrdata = CowinData(user=request.user, txnId=txnId)
         usrdata.expiration_time = timezone.now() + datetime.timedelta(minutes=3)
         usrdata.save()
-        return Response({"msg": "Pls enter the OTP"}, status=status.HTTP_200_OK)
-    return Response({"error": r.status_code})
+        return Response({"detail": "Pls enter the OTP"}, status=status.HTTP_200_OK)
+    return Response({"detail": f"Error: {r.status_code}"})
 
 
 def get_token(otp, user):
@@ -85,8 +71,8 @@ def get_token(otp, user):
         if r.status_code == 200:
             usrdata.token = r.json()['token']
             usrdata.save()
-            return Response({"msg": "OTP verification successful"}, status=status.HTTP_200_OK)
-        return Response({"error": "Incorrect OTP provided. Try again"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "OTP verification successful"}, status=status.HTTP_200_OK)
+        return Response({"detail": "Incorrect OTP provided. Try again"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -97,8 +83,8 @@ def submit_otp(request):
         user_data = CowinData.objects.get(user=request.user)
         if user_data.expiration_time > timezone.now():
             get_token(otp, request.user)
-        return Response({"error": "OTP Expired, regenerate OTP"}, status=status.HTTP_401_UNAUTHORIZED)
-    return Response({"error": "OTP not provided"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "OTP Expired, regenerate OTP"}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response({"detail": "OTP not provided"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])

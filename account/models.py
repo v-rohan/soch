@@ -29,9 +29,11 @@ class ReferrerId(models.Model):
 class CowinData(models.Model):
     txnId = models.CharField(max_length=40, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    expiration_time = models.DateTimeField(default=timezone.now())
+    expiration_time = models.DateTimeField(default=timezone.now)
     token = models.TextField(blank=True)
     beneficiary_reference_id = models.CharField(max_length=13, blank=True)
+    appointment_id_1 = models.CharField(max_length=40, default='')
+    appointment_id_2 = models.CharField(max_length=40, default='')
 
     def __str__(self) -> str:
         return self.user.username
