@@ -14,25 +14,29 @@ class TaskMiddleWare():
 
     def __call__(self, request):
         response = self.get_response(request)
-        if 'admin' not in request.path_info:
+        if 'admin' not in request.path_info \
+        and 'login/' not in request.path_info \
+        and 'register/' not in request.path_info\
+        and 'requestotp/' not in request.path_info:
             if 'recieved' not in request.path_info:
                 try:
                     response.data['taskId'] = request.META["HTTP_TASK_ID"]
+                    response.data['referrerId'] = request.META['HTTP_REFERRER_ID']
                     response._is_rendered = False 
                     response.render()
                 except Exception:
                     pass
-            if 'login' in request.path_info or 'register' in request.path_info:
-                now = timezone.now()
-                exec_time = now + timedelta(seconds=STATUS_CHECK_TIMEOUT)
-                task = sms_scheduler.apply_async(({
-                    'user': request.user.pk,
-                    'path_info': request.path_info
-                }, ), eta=exec_time)
-                response.data['taskId'] = task.id
-                response.data['referrerId'] = request.META['HTTP_REFERRER_ID']
-                response._is_rendered = False 
-                response.render()
+            # if 'login' in request.path_info or 'register' in request.path_info:
+            #     now = timezone.now()
+            #     exec_time = now + timedelta(seconds=STATUS_CHECK_TIMEOUT)
+            #     task = sms_scheduler.apply_async(({
+            #         'user': request.user.pk,
+            #         'path_info': request.path_info
+            #     }, ), eta=exec_time)
+            #     response.data['taskId'] = task.id
+            #     response.data['referrerId'] = request.META['HTTP_REFERRER_ID']
+            #     response._is_rendered = False 
+            #     response.render()
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
