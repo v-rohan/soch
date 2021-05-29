@@ -6,13 +6,30 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
+  Dimensions,
 } from 'react-native';
 import {register} from '../middleware/api';
 
-const Register = () => {
+const window = Dimensions.get('window');
+const screen = Dimensions.get('screen');
+
+const Register = ({history}) => {
   const [mobileNum, onChangeMobileNum] = React.useState(null);
   const [password, onChangePassword] = React.useState(null);
   const [confirmPassword, onChangeConfirmPassword] = React.useState(null);
+
+  const [dimensions, setDimensions] = React.useState({window, screen});
+
+  const onChange = ({window, screen}) => {
+    setDimensions({window, screen});
+  };
+
+  React.useEffect(() => {
+    Dimensions.addEventListener('change', onChange);
+    return () => {
+      Dimensions.removeEventListener('change', onChange);
+    };
+  });
 
   const onPressHandler = () => {
     const data = JSON.stringify({
@@ -30,7 +47,14 @@ const Register = () => {
         <Text style={styles.text}>REGISTRATION</Text>
       </View>
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <View style={styles.centerContainer}>
+        <View
+          style={[
+            styles.centerContainer,
+            {
+              width: dimensions.window.width * 0.9,
+              height: dimensions.window.height * 0.4,
+            },
+          ]}>
           <TextInput
             value={mobileNum}
             onChangeText={(text) => onChangeMobileNum(text)}
@@ -72,7 +96,7 @@ const Register = () => {
             }}>
             Already have an account?
           </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => history.push('/')}>
             <Text
               style={{
                 color: '#5F5DDF',
@@ -98,9 +122,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
   },
   centerContainer: {
-    // marginHorizontal: 15,
-    width: 370,
-    height: 300,
+    // marginHorizontal: 15;
     padding: 20,
     borderRadius: 15,
     backgroundColor: '#2D2D39',
