@@ -34,9 +34,9 @@ class AppSessionViewSet(viewsets.ViewSet):
             f'{AAROGRA_SETU_API}/v2/appointment/sessions/public/{time}ByPin', params=params, headers=headers)
         print(r)
         if r.status_code == 200:
-            return Response({"data": r.json()})
+            return Response({"detail": r.json()})
         else:
-            return Response({"detail": "Input parameter missing"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Input parameter missing"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['POST'])
     def getByDistrict(self, request):
@@ -51,9 +51,9 @@ class AppSessionViewSet(viewsets.ViewSet):
         r = requests.get(
             f'{AAROGRA_SETU_API}​/v2​/appointment​/sessions​/public​/{time}ByDistrict',  params=params, headers=headers)
         if r.status_code == 200:
-            return Response({"data": r.json()})
+            return Response({"detail": r.json()})
         else:
-            return Response({"detail": "Input parameter missing or invalid"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Input parameter missing or invalid"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['POST'])
     def getCalendarByCenter(self, request):
@@ -64,9 +64,9 @@ class AppSessionViewSet(viewsets.ViewSet):
         r = requests.get(
             f"{AAROGRA_SETU_API}/v2/appointment/sessions/public/calendarByCenter", params=params, headers=headers)
         if r.status_code == 200:
-            return Response({"data": r.json()})
+            return Response({"detail": r.json()})
         else:
-            return Response({"detail": "Input parameter missing"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Input parameter missing"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class MetaDataViewSet(viewsets.ViewSet):
@@ -75,10 +75,10 @@ class MetaDataViewSet(viewsets.ViewSet):
     def getStates(self, request):
         r = requests.get(f"{AAROGRA_SETU_API}​/v2​/admin​/location​/states")
         if r.status_code == 200:
-            return Response({"data": r.json()})
+            return Response({"detail": r.json()})
         else:
             print(r.status_code)
-            return Response({"detail": "Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=["GET"])
     def getDistricts(self, request):
@@ -87,7 +87,7 @@ class MetaDataViewSet(viewsets.ViewSet):
                          params={'state_id': state_id}, headers=headers)
         if r.status_code == 200:
             return Response({'data': r.json()})
-        return Response({"detail": "Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -102,8 +102,8 @@ def register_benificiary(request):
     if r.status_code == 200:
         user.beneficiary_reference_id = r.json()['beneficiary_reference_id']
         user.save()
-        return Response(status=status.HTTP_200_OK)
-    return Response({"detail": f"Error: {r.status_code}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'detail': 'Benificiary Registered Successfully. Your benificiary id is {}'.format(user.beneficiary_reference_id)}, status=status.HTTP_200_OK)
+    return Response({"error": f"Error: {r.status_code}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -116,13 +116,13 @@ def book_appointment(request):
     if dose and session_id and slot:
 
         if user.appointment_id_2:
-            return Response({'detail': 'Already Vaccinated'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Already Vaccinated'}, status=status.HTTP_400_BAD_REQUEST)
 
         if dose == 1 and user.appointment_id_1:
-            return Response({'detail': 'Already Vaccinated for Dose 1'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Already Vaccinated for Dose 1'}, status=status.HTTP_400_BAD_REQUEST)
 
         if dose == 2 and not user.appointment_id_1:
-            return Response({'detail': 'First Register for Dose 1'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'First Register for Dose 1'}, status=status.HTTP_400_BAD_REQUEST)
 
         headers['Authorization'] = f"Bearer {user.token}"
         url = f"{AAROGRA_SETU_API}/v2/appointment/schedule"
@@ -143,4 +143,4 @@ def book_appointment(request):
             return Response({'detail': f'Booking Successful for dose {dose}'}, status=status.HTTP_200_OK)
         return Response({"error": r.status_code}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return Response({'detail': 'Provide the necessary details'}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'error': 'Provide the necessary details'}, status=status.HTTP_400_BAD_REQUEST)

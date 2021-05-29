@@ -34,8 +34,8 @@ def registration_view(request):
         data['user'] = user.username
         data['token'] = Token.objects.get(user=user).key
         broadcast_sms([user.username], "Successfully registered on soch")
-        return Response(data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'detail': data}, status=status.HTTP_201_CREATED)
+    return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
@@ -56,7 +56,7 @@ def request_otp(request):
         usrdata.expiration_time = timezone.now() + datetime.timedelta(minutes=3)
         usrdata.save()
         return Response({"detail": "Pls enter the OTP"}, status=status.HTTP_200_OK)
-    return Response({"detail": f"Error: {r.status_code}"})
+    return Response({"error": f"Error: {r.status_code}"})
 
 
 def get_token(otp, user):
@@ -72,7 +72,7 @@ def get_token(otp, user):
             usrdata.token = r.json()['token']
             usrdata.save()
             return Response({"detail": "OTP verification successful"}, status=status.HTTP_200_OK)
-        return Response({"detail": "Incorrect OTP provided. Try again"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Incorrect OTP provided. Try again"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -83,8 +83,8 @@ def submit_otp(request):
         user_data = CowinData.objects.get(user=request.user)
         if user_data.expiration_time > timezone.now():
             get_token(otp, request.user)
-        return Response({"detail": "OTP Expired, regenerate OTP"}, status=status.HTTP_401_UNAUTHORIZED)
-    return Response({"detail": "OTP not provided"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "OTP Expired, regenerate OTP"}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response({"error": "OTP not provided"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -93,6 +93,6 @@ def delete_task(request):
     try:
         task_id = request.data.get('taskId')
     except Exception:
-        return Response({'detail': 'No TASK_ID'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'No TASK_ID'}, status=status.HTTP_400_BAD_REQUEST)
     revoke_task(task_id)
     return Response({'detail': 'OK'}, status=status.HTTP_200_OK)
