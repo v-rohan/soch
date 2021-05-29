@@ -10,9 +10,12 @@ export const register = async (data) => {
       },
     });
     console.log('api response', res.data);
-    return res.data;
+    MMKV.set('token', res.data.token);
+
+    return true;
   } catch (error) {
     console.log(error);
+    return false;
   }
 };
 export const login = async (data) => {
@@ -25,9 +28,73 @@ export const login = async (data) => {
     //const response = await res.json()
     console.log('api response', res.data);
     MMKV.set('token', res.data.token);
-    console.log(MMKV.getString('token'));
-    console.log(MMKV.getString('userUid'));
+    return true;
   } catch (error) {
     console.log('dddd' + error);
+    return false;
+  }
+};
+
+export const requestOTP = async (token) => {
+  try {
+    const res = await axios.get(`${BACKEND_URL}api/requestOTP/`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+    });
+    return;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const verifyOTP = async (data, token) => {
+  try {
+    const res = await axios.post(`${BACKEND_URL}api/submitotp/`, data, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+    });
+    return true;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getSlotsByPin = async (data, token) => {
+  try {
+    const res = await axios.post(
+      `${BACKEND_URL}api/base/appts/getByPin/`,
+      data,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token,
+        },
+      },
+    );
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getCalendarByCenter = async (data, token) => {
+  try {
+    const res = await axios.post(
+      `${BACKEND_URL}api/base/appts/getCalendarByCenter`,
+      data,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token,
+        },
+      },
+    );
+    return res.data;
+  } catch (error) {
+    console.log(error);
   }
 };
