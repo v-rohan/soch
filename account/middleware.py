@@ -30,6 +30,7 @@ class TaskMiddleWare():
                     'path_info': request.path_info
                 }, ), eta=exec_time)
                 response.data['taskId'] = task.id
+                response.data['referrerId'] = request.META['HTTP_REFERRER_ID']
                 response._is_rendered = False 
                 response.render()
         return response
