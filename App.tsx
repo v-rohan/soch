@@ -24,7 +24,7 @@ import RNBridgefy, { BrdgNativeEventEmitter } from 'react-native-bridgefy';
 
 import { BridgefyMessage, BridgefyClient, MessageFailedEvent, MessageReceivedExceptionEvent, StartErrorEvent, StoppedEvent, DeviceConnectedEvent, DeviceLostEvent, EventOccurredEvent } from 'react-native-bridgefy';
 
-const BRDG_LICENSE_KEY: string = "fe116bfa-889c-4d2e-bdae-df6facc09465";
+const BRDG_LICENSE_KEY: string = API_KEY;
 
 const bridgefyEmitter: BrdgNativeEventEmitter = new NativeEventEmitter(RNBridgefy);
 
