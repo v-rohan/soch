@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Platform,
   View,
@@ -12,18 +12,18 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
-import { API_KEY } from '@env';
-import { MMKV } from 'react-native-mmkv';
+import {API_KEY} from '@env';
+import {MMKV} from 'react-native-mmkv';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import BottomNavbar from './components/BottomNavbar';
 import VC_Card from './components/VC_Card';
 import { login, register } from "./middleware/api"
 import 'react-native-get-random-values';
-import { sha256 } from 'js-sha256';
-import { v4 as uuid } from 'uuid';
-import { NativeRouter, Switch, Route, useHistory } from 'react-router-native';
+import {sha256} from 'js-sha256';
+import {v4 as uuid} from 'uuid';
+import {NativeRouter, Switch, Route, useHistory} from 'react-router-native';
 
-import RNBridgefy, { BrdgNativeEventEmitter } from 'react-native-bridgefy';
+import RNBridgefy, {BrdgNativeEventEmitter} from 'react-native-bridgefy';
 
 const BRDG_LICENSE_KEY: string = API_KEY;
 // import Register from './components/Register';
@@ -41,9 +41,9 @@ import {
 import Register from './components/Register';
 import Login from './components/Login';
 
-
-const bridgefyEmitter: BrdgNativeEventEmitter = new NativeEventEmitter(RNBridgefy);
-
+const bridgefyEmitter: BrdgNativeEventEmitter = new NativeEventEmitter(
+  RNBridgefy,
+);
 
 var connected: boolean;
 var setConnected: React.Dispatch<React.SetStateAction<boolean>>;
@@ -79,7 +79,7 @@ interface AppMsg {
 //     }
 //   }, [])
 
-//   // returns current network connection status 
+//   // returns current network connection status
 //   return netInfo
 // }
 
@@ -109,11 +109,11 @@ export default function App() {
       'onMessageReceived',
       (message: BridgefyMessage<AppMsg>) => {
         console.log('onMessageReceived: ' + JSON.stringify(message));
-        if (message.content.type === MMKV.getString("currentAction")) {
-          MMKV.delete("currentAction")
-          if (message.content.type === "login") {
-            let data = JSON.parse(message.content.message)
-            console.log(data)
+        if (message.content.type === MMKV.getString('currentAction')) {
+          MMKV.delete('currentAction');
+          if (message.content.type === 'login') {
+            let data = JSON.parse(message.content.message);
+            console.log(data);
             if (data.status === true) {
               MMKV.delete("token")
               MMKV.set("token", data.token)
@@ -149,7 +149,7 @@ export default function App() {
       (message: BridgefyMessage<AppMsg>) => {
         console.log('onBroadcastMessageReceived: ' + JSON.stringify(message));
         //if(message.content.time)
-        if (message.content.type === "login") {
+        if (message.content.type === 'login') {
           loginHandler(JSON.parse(message.content.message));
         }
         else if (message.content.type === "register-soch") {
@@ -246,7 +246,7 @@ export default function App() {
             energyProfile: 'HIGH_PERFORMANCE',
             encryption: true,
           });
-          MMKV.set("uuid", brdgClient.userUuid)
+          MMKV.set('uuid', brdgClient.userUuid);
         })
         .catch((e: Error) => {
           console.log(e);
@@ -266,7 +266,7 @@ export default function App() {
           }
         })
         .catch((e: Error) => {
-          console.error(e)
+          console.error(e);
         });
     } else {
       doInitBrdg();
@@ -280,39 +280,40 @@ export default function App() {
     }
 
     var message = {
-      content: { type: type, message: mesaage, time: Date.now(), uuid: uuid },
+      content: {type: type, message: mesaage, time: Date.now(), uuid: uuid},
     };
-
 
     RNBridgefy.sendBroadcastMessage(message);
   };
 
-  let OnSendMessage = (mesaage: String, type: String, uuid: String, originaluuid: string) => {
+  let OnSendMessage = (
+    mesaage: String,
+    type: String,
+    uuid: String,
+    originaluuid: string,
+  ) => {
     if (!connected) {
       Alert.alert('Bridgefy not ready', 'Your Bridgefy could not start yet');
       return false;
     }
 
     var message = {
-      content: { type: type, message: mesaage, time: Date.now(), uuid: uuid },
+      content: {type: type, message: mesaage, time: Date.now(), uuid: uuid},
       receiver_id: originaluuid,
-    }
-    RNBridgefy.sendMessage(message)
-  }
+    };
+    RNBridgefy.sendMessage(message);
+  };
 
   let checkInternet = async () => {
-    console.log("check")
+    console.log('check');
     try {
       const res = await fetch('https://clients3.google.com/generate_204');
-      if (res.status === 204)
-        return true
-      else
-        return false
-    }
-    catch (error) {
+      if (res.status === 204) return true;
+      else return false;
+    } catch (error) {
       return false;
     }
-  }
+  };
 
   let loginHandler = async (data: Object) => {
     if (await checkInternet() == true) {
@@ -324,25 +325,32 @@ export default function App() {
       const stat = await login(payload)
       if (sha256(data.username) === sha256(MMKV.getString("number")+"DDD")) {
         if (stat !== false) {
-          MMKV.set("token", stat)
-          return { status: 'true' };
-        }
-        else return { status: 'false' };
-      }
-      else {
+          MMKV.set('token', stat);
+          return {status: 'true'};
+        } else return {status: 'false'};
+      } else {
         if (stat !== false) {
-          OnSendMessage(JSON.stringify({ status: true, token: stat }), "login", MMKV.getString("uuid"), data.uuid)
-        }
-        else {
-          OnSendMessage(JSON.stringify({ status: false }), "login", MMKV.getString("uuid"), data.uuid)
+          OnSendMessage(
+            JSON.stringify({status: true, token: stat}),
+            'login',
+            MMKV.getString('uuid'),
+            data.uuid,
+          );
+        } else {
+          OnSendMessage(
+            JSON.stringify({status: false}),
+            'login',
+            MMKV.getString('uuid'),
+            data.uuid,
+          );
         }
       }
     } else {
-      console.log("offline")
-      onSendBroadcast(JSON.stringify(data), "login", data.uuid)
-      return { status: 'pending' }
+      console.log('offline');
+      onSendBroadcast(JSON.stringify(data), 'login', data.uuid);
+      return {status: 'pending'};
     }
-  }
+  };
 
   let registerHandler = async (data: Object) => {
     if (await checkInternet() == true) {
@@ -355,12 +363,10 @@ export default function App() {
       const stat = await register(payload)
       if (sha256(data.username) === sha256(MMKV.getString("number")+"DDD")) {
         if (stat !== false) {
-          MMKV.set("token", stat)
-          return { status: 'true' };
-        }
-        else return { status: 'false' };
-      }
-      else {
+          MMKV.set('token', stat);
+          return {status: 'true'};
+        } else return {status: 'false'};
+      } else {
         if (stat !== false) {
           OnSendMessage(JSON.stringify({ status: true, token: stat }), "register-soch", MMKV.getString("uuid"), data.uuid)
         }
@@ -373,7 +379,7 @@ export default function App() {
       onSendBroadcast(JSON.stringify(data), "register-soch", data.uuid)
       return { status: 'pending' }
     }
-  }
+  };
 
   useEffect(() => {
     initListeners();
@@ -394,13 +400,11 @@ export default function App() {
           <Route exact path="/" render={props => <Login loginHandler={loginHandler} />} />
           <Route exact path="/register" render={props => <Register registerHandler={registerHandler} />} />
           <Route exact path="/beneficiary" component={Register} />
-
         </Switch>
       </View>
     </NativeRouter>
   );
 }
-
 
 const styles = StyleSheet.create({
   connected: {

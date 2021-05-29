@@ -2,14 +2,14 @@ import React from 'react';
 import {View, StyleSheet, Text, TouchableOpacity} from 'react-native';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const VC_Card = () => {
+const VC_Card = ({name, address1, address2, time}) => {
   return (
     <TouchableOpacity style={styles.card}>
       <View>
-        <Text style={styles.title}>VACCINATION CENTRE 1</Text>
-        <Text style={styles.address}>Address line 1</Text>
-        <Text style={styles.address}>Address line 2</Text>
-        <Text style={styles.time}>Time</Text>
+        <Text style={styles.title}>{name}</Text>
+        <Text style={styles.address}>{address1}</Text>
+        <Text style={styles.address}>{address2}</Text>
+        <Text style={styles.time}>{time}</Text>
       </View>
       <MaterialCommunityIcon
         name="arrow-right-circle-outline"
@@ -22,6 +22,7 @@ const VC_Card = () => {
 
 const styles = StyleSheet.create({
   card: {
+    margin: 15,
     padding: 15,
     backgroundColor: '#5F5DDF',
     borderRadius: 15,
