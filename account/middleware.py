@@ -14,7 +14,6 @@ class TaskMiddleWare():
 
     def __call__(self, request):
         response = self.get_response(request)
-<<<<<<< Updated upstream
         if 'admin' not in request.path_info:
             if 'recieved' not in request.path_info:
                 try:
@@ -31,11 +30,6 @@ class TaskMiddleWare():
                     'path_info': request.path_info
                 }, ), eta=exec_time)
                 response.data['taskId'] = task.id
-=======
-        if 'recieved' not in request.path_info or 'admin' not in request.path_info:
-            try:
-                response.data['taskId'] = request.META["HTTP_TASK_ID"]
->>>>>>> Stashed changes
                 response._is_rendered = False 
                 response.render()
         return response
