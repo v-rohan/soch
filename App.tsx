@@ -17,7 +17,7 @@ import { MMKV } from 'react-native-mmkv';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import BottomNavbar from './components/BottomNavbar';
 import VC_Card from './components/VC_Card';
-import { login } from "./middleware/api"
+import { login, register } from "./middleware/api"
 import 'react-native-get-random-values';
 import { sha256 } from 'js-sha256';
 import { v4 as uuid } from 'uuid';
@@ -115,6 +115,7 @@ export default function App() {
             let data = JSON.parse(message.content.message)
             console.log(data)
             if (data.status === true) {
+              MMKV.delete("token")
               MMKV.set("token", data.token)
               history.replace("/beneficiary")
             }
@@ -122,6 +123,20 @@ export default function App() {
               console.log("hein")
               MMKV.set("appData", "-1")
             }
+          }
+          else if (message.content.type === "register-soch") {
+            let data = JSON.parse(message.content.message)
+            console.log(data)
+            if (data.status === true) {
+              MMKV.delete("token")
+              MMKV.set("token", data.token)
+              history.replace("/beneficiary")
+            }
+            else {
+              console.log("hein")
+              MMKV.set("appData", "-1")
+            }
+
           }
         }
       },
@@ -136,6 +151,9 @@ export default function App() {
         //if(message.content.time)
         if (message.content.type === "login") {
           loginHandler(JSON.parse(message.content.message));
+        }
+        else if (message.content.type === "register-soch") {
+          registerHandler(JSON.parse(message.content.message))
         }
       },
     );
@@ -299,8 +317,12 @@ export default function App() {
   let loginHandler = async (data: Object) => {
     if (await checkInternet() == true) {
       console.log("online")
-      const stat = await login(data)
-      if (sha256(data.username) === sha256(MMKV.getString("number"))) {
+      const payload = {
+        username: data.username,
+        password: data.password
+      }
+      const stat = await login(payload)
+      if (sha256(data.username) === sha256(MMKV.getString("number")+"DDD")) {
         if (stat !== false) {
           MMKV.set("token", stat)
           return { status: 'true' };
@@ -325,8 +347,13 @@ export default function App() {
   let registerHandler = async (data: Object) => {
     if (await checkInternet() == true) {
       console.log("online")
-      const stat = await login(data)
-      if (sha256(data.username) === sha256(MMKV.getString("number"))) {
+      const payload = {
+        username: data.username,
+        password: data.password,
+        password2: data.password2
+      }
+      const stat = await register(payload)
+      if (sha256(data.username) === sha256(MMKV.getString("number")+"DDD")) {
         if (stat !== false) {
           MMKV.set("token", stat)
           return { status: 'true' };
@@ -335,15 +362,15 @@ export default function App() {
       }
       else {
         if (stat !== false) {
-          OnSendMessage(JSON.stringify({ status: true, token: stat }), "login", MMKV.getString("uuid"), data.uuid)
+          OnSendMessage(JSON.stringify({ status: true, token: stat }), "register-soch", MMKV.getString("uuid"), data.uuid)
         }
         else {
-          OnSendMessage(JSON.stringify({ status: false }), "login", MMKV.getString("uuid"), data.uuid)
+          OnSendMessage(JSON.stringify({ status: false }), "register-soch", MMKV.getString("uuid"), data.uuid)
         }
       }
     } else {
       console.log("offline")
-      onSendBroadcast(JSON.stringify(data), "login", data.uuid)
+      onSendBroadcast(JSON.stringify(data), "register-soch", data.uuid)
       return { status: 'pending' }
     }
   }
@@ -365,7 +392,7 @@ export default function App() {
       <View style={styles.container}>
         <Switch>
           <Route exact path="/" render={props => <Login loginHandler={loginHandler} />} />
-          <Route exact path="/register" component={Register} />
+          <Route exact path="/register" render={props => <Register registerHandler={registerHandler} />} />
           <Route exact path="/beneficiary" component={Register} />
 
         </Switch>

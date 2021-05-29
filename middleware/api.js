@@ -10,9 +10,7 @@ export const register = async (data) => {
       },
     });
     console.log('api response', res.data);
-    MMKV.set('token', res.data.token);
-
-    return true;
+    return res.data.token;
   } catch (error) {
     console.log(error);
     return false;

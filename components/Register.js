@@ -1,27 +1,29 @@
 import React from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { useHistory } from "react-router-native"
+import { MMKV } from 'react-native-mmkv';
 import {
   View,
+  Alert,
   Text,
   TouchableOpacity,
   TextInput,
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import {register} from '../middleware/api';
 
 const window = Dimensions.get('window');
 const screen = Dimensions.get('screen');
 
-const Register = ({history}) => {
+const Register = ({ registerHandler }) => {
   const [mobileNum, onChangeMobileNum] = React.useState(null);
   const [password, onChangePassword] = React.useState(null);
   const [confirmPassword, onChangeConfirmPassword] = React.useState(null);
+  let history = useHistory();
+  const [dimensions, setDimensions] = React.useState({ window, screen });
 
-  const [dimensions, setDimensions] = React.useState({window, screen});
-
-  const onChange = ({window, screen}) => {
-    setDimensions({window, screen});
+  const onChange = ({ window, screen }) => {
+    setDimensions({ window, screen });
   };
 
   React.useEffect(() => {
@@ -31,14 +33,36 @@ const Register = ({history}) => {
     };
   });
 
-  const onPressHandler = () => {
-    const data = JSON.stringify({
+  const onPressHandler = async () => {
+    const data = {
       username: mobileNum,
       password: password,
       password2: confirmPassword,
-    });
+      uuid: MMKV.getString("uuid")
+    };
+    MMKV.set("number", mobileNum)
+    MMKV.set("currentAction", "register-soch")
     console.log(data);
-    register(data);
+    const done = await registerHandler(data)
+    console.log(done)
+    if (done.status == 'false') {
+      Alert.alert("Wrong Credentials")
+    }
+    else if (done.status == 'pending') {
+      var startTime = new Date().getTime();
+      var interval = setInterval(function () {
+        if (new Date().getTime() - startTime > 180000) {
+          clearInterval(interval);
+          Alert.alert("Failure to Register")
+          return;
+        }
+        if (MMKV.getString("appData") === '-1') {
+          clearInterval(interval);
+          Alert.alert("Failure to Register")
+          return;
+        }
+      }, 200);
+    }
   };
 
   return (
@@ -46,7 +70,7 @@ const Register = ({history}) => {
       <View style={styles.header}>
         <Text style={styles.text}>REGISTRATION</Text>
       </View>
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <View
           style={[
             styles.centerContainer,
@@ -81,12 +105,12 @@ const Register = ({history}) => {
           />
         </View>
         <TouchableOpacity onPress={onPressHandler} style={styles.search}>
-          <Text style={{color: '#fff', marginRight: 10, fontSize: 17}}>
+          <Text style={{ color: '#fff', marginRight: 10, fontSize: 17 }}>
             REGISTER
           </Text>
           <Icon name="arrow-circle-right" size={25} color="#fff" />
         </TouchableOpacity>
-        <View style={{flexDirection: 'row'}}>
+        <View style={{ flexDirection: 'row' }}>
           <Text
             style={{
               color: '#fff',
