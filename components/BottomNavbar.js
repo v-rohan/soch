@@ -8,15 +8,16 @@ const BottomNavbar = () => {
 
   return (
     <View style={styles.bottomNavigation}>
-      {buttons.map(value => {
+      {buttons.map((value, index) => {
         return (
           <TouchableOpacity
+            key={index}
             onPress={() => {
               console.log(`${value} pressed`);
-              setIndex(buttons.indexOf(value));
+              setIndex(index);
             }}
             style={
-              buttons.indexOf(value) === selectedIndex
+              index === selectedIndex
                 ? [styles.menu, {backgroundColor: '#5F5DDF'}]
                 : styles.menu
             }>
