@@ -19,6 +19,7 @@ import VC_Card from './components/VC_Card';
 import {GiftedChat, IMessage, User} from 'react-native-gifted-chat';
 import 'react-native-get-random-values';
 import {v4 as uuid} from 'uuid';
+import {NativeRouter, Switch, Route} from 'react-router-native';
 
 import RNBridgefy, {BrdgNativeEventEmitter} from 'react-native-bridgefy';
 
@@ -33,7 +34,7 @@ import {
   DeviceLostEvent,
   EventOccurredEvent,
 } from 'react-native-bridgefy';
-// import Register from './components/Register';
+import Register from './components/Register';
 import Login from './components/Login';
 
 const BRDG_LICENSE_KEY: string = 'fe116bfa-889c-4d2e-bdae-df6facc09465';
@@ -320,10 +321,15 @@ export default function App() {
   }, []);
 
   return (
-    <View style={styles.container}>
-      {/* <Register /> */}
-      <Login />
-      {/* <View style={styles.header}>
+    <NativeRouter>
+      <View style={styles.container}>
+        <Switch>
+          <Route exact path="/" component={Login} />
+          <Route exact path="/register" component={Register} />
+        </Switch>
+        {/* <Register /> */}
+        {/* <Login /> */}
+        {/* <View style={styles.header}>
           <Text style={styles.text}>VACCINATION CENTRES</Text>
           <View style={styles.inputContainer}>
             <TextInput
@@ -347,8 +353,9 @@ export default function App() {
         <View style={{padding: 20, flex: 1}}>
           <VC_Card />
         </View> */}
-      {/* <BottomNavbar /> */}
-    </View>
+        {/* <BottomNavbar /> */}
+      </View>
+    </NativeRouter>
   );
 }
 
