@@ -62,6 +62,8 @@ const Register = ({ registerHandler }) => {
           return;
         }
       }, 200);
+    }else{
+      history.push("/otp")
     }
   };
 
