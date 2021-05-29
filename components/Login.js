@@ -7,20 +7,22 @@ import {
   TextInput,
   StyleSheet,
   Dimensions,
+  Alert,
 } from 'react-native';
-import {login} from '../middleware/api';
+import { useHistory } from "react-router-native"
+import { MMKV } from 'react-native-mmkv';
 
 const window = Dimensions.get('window');
 const screen = Dimensions.get('screen');
 
-const Login = ({history}) => {
-  const [mobileNum, onChangeMobileNum] = React.useState(null);
+const Login = ({ loginHandler }) => {
+  const [mobileNum, onChangeMobileNum] = React.useState("");
   const [password, onChangePassword] = React.useState(null);
+  let history = useHistory();
+  const [dimensions, setDimensions] = React.useState({ window, screen });
 
-  const [dimensions, setDimensions] = React.useState({window, screen});
-
-  const onChange = ({window, screen}) => {
-    setDimensions({window, screen});
+  const onChange = ({ window, screen }) => {
+    setDimensions({ window, screen });
   };
 
   React.useEffect(() => {
@@ -30,13 +32,37 @@ const Login = ({history}) => {
     };
   });
 
-  const onPressHandler = () => {
-    const data = JSON.stringify({
+  const onPressHandler = async () => {
+    const data = {
       username: mobileNum,
       password: password,
-    });
+      uuid: MMKV.getString("uuid")
+    };
+    MMKV.set("number", mobileNum)
+    MMKV.set("currentAction","login")
     console.log(data);
-    login(data);
+    const done = await loginHandler(data)
+    console.log(done)
+    if (done.status == 'false') {
+      Alert.alert("Wrong Credentials")
+    }
+    else if (done.status == 'pending') {
+      var startTime = new Date().getTime();
+      var interval = setInterval(function () {
+        if (new Date().getTime() - startTime > 180000) {
+          clearInterval(interval);
+          Alert.alert("Failure to Login")
+          return;
+        }
+        if (MMKV.getString("appData") === '-1') {
+          clearInterval(interval);
+          Alert.alert("Failure to Login2")
+          return;
+        }
+      }, 200);
+    }
+
+
   };
 
   return (
@@ -44,7 +70,7 @@ const Login = ({history}) => {
       <View style={styles.header}>
         <Text style={styles.text}>LOGIN</Text>
       </View>
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <View
           style={[
             styles.centerContainer,
@@ -71,12 +97,12 @@ const Login = ({history}) => {
           />
         </View>
         <TouchableOpacity onPress={onPressHandler} style={styles.search}>
-          <Text style={{color: '#fff', marginRight: 10, fontSize: 17}}>
+          <Text style={{ color: '#fff', marginRight: 10, fontSize: 17 }}>
             LOGIN
           </Text>
           <Icon name="arrow-circle-right" size={25} color="#fff" />
         </TouchableOpacity>
-        <View style={{flexDirection: 'row'}}>
+        <View style={{ flexDirection: 'row' }}>
           <Text
             style={{
               color: '#fff',

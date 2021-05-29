@@ -27,8 +27,8 @@ export const login = async (data) => {
     });
     //const response = await res.json()
     console.log('api response', res.data);
-    MMKV.set('token', res.data.token);
-    return true;
+  //  MMKV.set('token', res.data.token);
+    return res.data.token;
   } catch (error) {
     console.log('dddd' + error);
     return false;

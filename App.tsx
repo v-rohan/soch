@@ -7,22 +7,26 @@ import {
   Alert,
   StyleSheet,
   NativeEventEmitter,
+  ToastAndroid,
   PermissionsAndroid,
   TextInput,
   TouchableOpacity,
 } from 'react-native';
-// import { API_KEY } from '@env';
+import {API_KEY} from '@env';
 import {MMKV} from 'react-native-mmkv';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import BottomNavbar from './components/BottomNavbar';
 import VC_Card from './components/VC_Card';
-import {GiftedChat, IMessage, User} from 'react-native-gifted-chat';
+import {login} from './middleware/api';
 import 'react-native-get-random-values';
+import {sha256} from 'js-sha256';
 import {v4 as uuid} from 'uuid';
-import {NativeRouter, Switch, Route} from 'react-router-native';
+import {NativeRouter, Switch, Route, useHistory} from 'react-router-native';
 
 import RNBridgefy, {BrdgNativeEventEmitter} from 'react-native-bridgefy';
 
+const BRDG_LICENSE_KEY: string = API_KEY;
+// import Register from './components/Register';
 import {
   BridgefyMessage,
   BridgefyClient,
@@ -37,44 +41,53 @@ import {
 import Register from './components/Register';
 import Login from './components/Login';
 
-const BRDG_LICENSE_KEY: string = 'fe116bfa-889c-4d2e-bdae-df6facc09465';
-
 const bridgefyEmitter: BrdgNativeEventEmitter = new NativeEventEmitter(
   RNBridgefy,
 );
-
-var messages: Array<IMessage>;
-var setMessages: React.Dispatch<React.SetStateAction<Array<IMessage>>>;
-
-var client: User | undefined;
-var setClient: React.Dispatch<React.SetStateAction<User | undefined>>;
 
 var connected: boolean;
 var setConnected: React.Dispatch<React.SetStateAction<boolean>>;
 
 interface AppMsg {
   message: string;
+  type: string;
+  time: Number;
+  uuid: string;
 }
 
-const systemMessage = (msg: string) => {
-  return {
-    _id: uuid(),
-    text: msg,
-    createdAt: new Date(),
-    system: true,
-  } as IMessage;
-};
+// function useNetInfo() {
+//   // useState hook for setting netInfo
+//   const [netInfo, setNetInfo] = useState(false)
+
+//   // It calls when connection changes
+//   const onChange = (newState) => {
+//     setNetInfo(newState)
+//   }
+
+//   // useEffect hook calls only once like componentDidMount()
+//   useEffect(() => {
+//     // To get current network connection status
+//     NetInfo.isConnected.fetch().then((connectionInfo) => {
+//       setNetInfo(connectionInfo)
+//     })
+//     // Whenever connection status changes below event fires
+//     NetInfo.isConnected.addEventListener('connectionChange', onChange)
+
+//     // Our event cleanup function
+//     return () => {
+//       NetInfo.isConnected.removeEventListener('connectionChange', onChange)
+//     }
+//   }, [])
+
+//   // returns current network connection status
+//   return netInfo
+// }
 
 export default function App() {
-  const msgState = useState<Array<IMessage>>([]);
-  messages = msgState[0];
-  setMessages = msgState[1];
-  const clientState = useState<User | undefined>(undefined);
-  client = clientState[0];
-  setClient = clientState[1];
   const connectedState = useState(false);
   connected = connectedState[0];
   setConnected = connectedState[1];
+  let history = useHistory();
 
   let clearListeners = () => {
     bridgefyEmitter.removeAllListeners('onMessageReceived');
@@ -96,6 +109,20 @@ export default function App() {
       'onMessageReceived',
       (message: BridgefyMessage<AppMsg>) => {
         console.log('onMessageReceived: ' + JSON.stringify(message));
+        if (message.content.type === MMKV.getString('currentAction')) {
+          MMKV.delete('currentAction');
+          if (message.content.type === 'login') {
+            let data = JSON.parse(message.content.message);
+            console.log(data);
+            if (data.status === true) {
+              MMKV.set('token', data.token);
+              history.replace('/beneficiary');
+            } else {
+              console.log('hein');
+              MMKV.set('appData', '-1');
+            }
+          }
+        }
       },
     );
 
@@ -105,15 +132,9 @@ export default function App() {
       'onBroadcastMessageReceived',
       (message: BridgefyMessage<AppMsg>) => {
         console.log('onBroadcastMessageReceived: ' + JSON.stringify(message));
-        if (message.content.message) {
-          Alert.alert('Alert Title', message.content.message, [
-            {
-              text: 'Cancel',
-              onPress: () => console.log('Cancel Pressed'),
-              style: 'cancel',
-            },
-            {text: 'OK', onPress: () => console.log('OK Pressed')},
-          ]);
+        //if(message.content.time)
+        if (message.content.type === 'login') {
+          loginHandler(JSON.parse(message.content.message));
         }
       },
     );
@@ -124,11 +145,6 @@ export default function App() {
       'onMessageFailed',
       (evt: MessageFailedEvent<AppMsg>) => {
         console.log('onMessageFailed: ' + evt);
-        setMessages(
-          GiftedChat.append(messages, [
-            systemMessage(`Send message failed: ${evt.description}`),
-          ]),
-        );
       },
     );
 
@@ -148,11 +164,6 @@ export default function App() {
       'onMessageReceivedException',
       (evt: MessageReceivedExceptionEvent<AppMsg>) => {
         console.log('onMessageReceivedException: ' + evt);
-        setMessages(
-          GiftedChat.append(messages, [
-            systemMessage(`Receive message error: ${evt.description}`),
-          ]),
-        );
       },
     );
 
@@ -166,31 +177,18 @@ export default function App() {
       // For now, device is an empty dictionary
       console.log('onStarted');
       setConnected(true);
-      setMessages(
-        GiftedChat.append(messages, [
-          systemMessage(`Bridgefy started successfully`),
-        ]),
-      );
     });
 
     // This event is launched when the RNBridgefy service fails on the start, it receives
     // a dictionary (error) that will be explained in the appendix.
     bridgefyEmitter.addListener('onStartError', (evt: StartErrorEvent) => {
       console.log('onStartError: ', evt);
-      setMessages(
-        GiftedChat.append(messages, [
-          systemMessage(`Bridgefy could not start: ${evt.message}`),
-        ]),
-      );
     });
 
     // This event is launched when the RNBridgefy service stops.
     bridgefyEmitter.addListener('onStopped', (evt: StoppedEvent) => {
       console.log('onStopped');
       setConnected(false);
-      setMessages(
-        GiftedChat.append(messages, [systemMessage(`Bridgefy stopped`)]),
-      );
     });
 
     // This method is launched when a device is nearby and has established connection with the local user.
@@ -199,21 +197,11 @@ export default function App() {
       'onDeviceConnected',
       (evt: DeviceConnectedEvent) => {
         console.log('onDeviceConnected: ' + JSON.stringify(evt));
-        setMessages(
-          GiftedChat.append(messages, [
-            systemMessage(`Connected to device: ${evt.userId}`),
-          ]),
-        );
       },
     );
     // This method is launched when there is a disconnection of a user.
     bridgefyEmitter.addListener('onDeviceLost', (evt: DeviceLostEvent) => {
       console.log('onDeviceLost: ' + evt);
-      setMessages(
-        GiftedChat.append(messages, [
-          systemMessage(`Device lost: ${evt.userId}`),
-        ]),
-      );
     });
 
     // This is method is launched exclusively on iOS devices, notifies about certain actions like when
@@ -232,11 +220,6 @@ export default function App() {
     function doInitBrdg() {
       RNBridgefy.init(BRDG_LICENSE_KEY)
         .then((brdgClient: BridgefyClient) => {
-          setClient({
-            _id: brdgClient.userUuid,
-            name: 'Broadcast User',
-            avatar: 'https://unsplash.it/200/300/?random',
-          });
           console.log('Brdg client = ', brdgClient);
           RNBridgefy.start({
             autoConnect: true,
@@ -244,14 +227,10 @@ export default function App() {
             energyProfile: 'HIGH_PERFORMANCE',
             encryption: true,
           });
+          MMKV.set('uuid', brdgClient.userUuid);
         })
         .catch((e: Error) => {
           console.log(e);
-          setMessages(
-            GiftedChat.append(messages, [
-              systemMessage(`Bridgefy could not init: ${e.message}`),
-            ]),
-          );
         });
     }
     if (Platform.OS == 'android') {
@@ -265,47 +244,122 @@ export default function App() {
             result['android.permission.ACCESS_FINE_LOCATION']
           ) {
             doInitBrdg();
-          } else {
-            setMessages(
-              GiftedChat.append(messages, [
-                systemMessage(
-                  `Could not get required permissions to start Bridgefy`,
-                ),
-              ]),
-            );
           }
         })
         .catch((e: Error) => {
-          setMessages(
-            GiftedChat.append(messages, [
-              systemMessage(
-                `Could not get required permissions to start Bridgefy: ${e.message}`,
-              ),
-            ]),
-          );
+          console.error(e);
         });
     } else {
       doInitBrdg();
     }
   };
 
-  let onSend = (mesaage: String) => {
+  let onSendBroadcast = (mesaage: String, type: String, uuid: String) => {
     if (!connected) {
       Alert.alert('Bridgefy not ready', 'Your Bridgefy could not start yet');
       return false;
     }
 
     var message = {
-      content: {message: mesaage},
+      content: {type: type, message: mesaage, time: Date.now(), uuid: uuid},
     };
 
-    // console.log('onSend', brdgMessages[0]);
-
-    // let nm = GiftedChat.append(messages, brdgMessages);
-    // console.log('1 - nms = ', messages, brdgMessages, nm);
-    // setMessages(nm);
-
     RNBridgefy.sendBroadcastMessage(message);
+  };
+
+  let OnSendMessage = (
+    mesaage: String,
+    type: String,
+    uuid: String,
+    originaluuid: string,
+  ) => {
+    if (!connected) {
+      Alert.alert('Bridgefy not ready', 'Your Bridgefy could not start yet');
+      return false;
+    }
+
+    var message = {
+      content: {type: type, message: mesaage, time: Date.now(), uuid: uuid},
+      receiver_id: originaluuid,
+    };
+    RNBridgefy.sendMessage(message);
+  };
+
+  let checkInternet = async () => {
+    console.log('check');
+    try {
+      const res = await fetch('https://clients3.google.com/generate_204');
+      if (res.status === 204) return true;
+      else return false;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  let loginHandler = async (data: Object) => {
+    if ((await checkInternet()) == true) {
+      console.log('online');
+      const stat = await login(data);
+      if (sha256(data.username) === sha256(MMKV.getString('number'))) {
+        if (stat !== false) {
+          MMKV.set('token', stat);
+          return {status: 'true'};
+        } else return {status: 'false'};
+      } else {
+        if (stat !== false) {
+          OnSendMessage(
+            JSON.stringify({status: true, token: stat}),
+            'login',
+            MMKV.getString('uuid'),
+            data.uuid,
+          );
+        } else {
+          OnSendMessage(
+            JSON.stringify({status: false}),
+            'login',
+            MMKV.getString('uuid'),
+            data.uuid,
+          );
+        }
+      }
+    } else {
+      console.log('offline');
+      onSendBroadcast(JSON.stringify(data), 'login', data.uuid);
+      return {status: 'pending'};
+    }
+  };
+
+  let registerHandler = async (data: Object) => {
+    if ((await checkInternet()) == true) {
+      console.log('online');
+      const stat = await login(data);
+      if (sha256(data.username) === sha256(MMKV.getString('number'))) {
+        if (stat !== false) {
+          MMKV.set('token', stat);
+          return {status: 'true'};
+        } else return {status: 'false'};
+      } else {
+        if (stat !== false) {
+          OnSendMessage(
+            JSON.stringify({status: true, token: stat}),
+            'login',
+            MMKV.getString('uuid'),
+            data.uuid,
+          );
+        } else {
+          OnSendMessage(
+            JSON.stringify({status: false}),
+            'login',
+            MMKV.getString('uuid'),
+            data.uuid,
+          );
+        }
+      }
+    } else {
+      console.log('offline');
+      onSendBroadcast(JSON.stringify(data), 'login', data.uuid);
+      return {status: 'pending'};
+    }
   };
 
   useEffect(() => {
@@ -324,52 +378,18 @@ export default function App() {
     <NativeRouter>
       <View style={styles.container}>
         <Switch>
-          <Route exact path="/" component={Login} />
+          <Route
+            exact
+            path="/"
+            render={(props) => <Login loginHandler={loginHandler} />}
+          />
           <Route exact path="/register" component={Register} />
+          <Route exact path="/beneficiary" component={Register} />
         </Switch>
-        {/* <Register /> */}
-        {/* <Login /> */}
-        {/* <View style={styles.header}>
-          <Text style={styles.text}>VACCINATION CENTRES</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="6 digit pincode"
-              placeholderTextColor="#fff"
-              style={styles.input}
-            />
-            <TouchableOpacity
-              //  onPress={onPressSearchHandler}
-              style={styles.search}>
-              <Icon name="arrow-circle-right" size={25} color="#fff" />
-            </TouchableOpacity>
-          </View>
-          <Button
-            onPress={() => onSend('Hi this is a test message')}
-            title="EMIT TEST MESSAGE"></Button>
-          <View>
-            <Text style={styles.text}>{MMKV.getString('userUid')}</Text>
-          </View>
-        </View>
-        <View style={{padding: 20, flex: 1}}>
-          <VC_Card />
-        </View> */}
-        {/* <BottomNavbar /> */}
       </View>
     </NativeRouter>
   );
 }
-
-const ChatFooter = (props: {connected: boolean}) => {
-  let {connected} = props;
-  return (
-    <View style={connected ? styles.connected : styles.disconnected}>
-      {connected && <Text style={styles.connectedText}>Bridgefy started</Text>}
-      {!connected && (
-        <Text style={styles.disconnectedText}>Bridgefy not started !</Text>
-      )}
-    </View>
-  );
-};
 
 const styles = StyleSheet.create({
   connected: {
