@@ -25,8 +25,13 @@ import RNBridgefy, { BrdgNativeEventEmitter } from 'react-native-bridgefy';
 import { BridgefyMessage, BridgefyClient, MessageFailedEvent, MessageReceivedExceptionEvent, StartErrorEvent, StoppedEvent, DeviceConnectedEvent, DeviceLostEvent, EventOccurredEvent } from 'react-native-bridgefy';
 
 const BRDG_LICENSE_KEY: string = API_KEY;
+// import Register from './components/Register';
+import Login from './components/Login';
 
-const bridgefyEmitter: BrdgNativeEventEmitter = new NativeEventEmitter(RNBridgefy);
+
+const bridgefyEmitter: BrdgNativeEventEmitter = new NativeEventEmitter(
+  RNBridgefy,
+);
 
 var messages: Array<IMessage>;
 var setMessages: React.Dispatch<React.SetStateAction<Array<IMessage>>>;
@@ -38,20 +43,19 @@ var connected: boolean;
 var setConnected: React.Dispatch<React.SetStateAction<boolean>>;
 
 interface AppMsg {
-  message: string
+  message: string;
 }
 
 const systemMessage = (msg: string) => {
-  return ({
+  return {
     _id: uuid(),
     text: msg,
     createdAt: new Date(),
     system: true,
-  }) as IMessage;
-}
+  } as IMessage;
+};
 
 export default function App() {
-
   const msgState = useState<Array<IMessage>>([]);
   messages = msgState[0];
   setMessages = msgState[1];
@@ -74,68 +78,77 @@ export default function App() {
     bridgefyEmitter.removeAllListeners('onDeviceConnected');
     bridgefyEmitter.removeAllListeners('onDeviceLost');
     bridgefyEmitter.removeAllListeners('onEventOccurred');
-  }
+  };
 
   let initListeners = () => {
     console.log('INITIATING THE BRDG RN LISTENERS');
-    bridgefyEmitter.addListener('onMessageReceived', (message: BridgefyMessage<AppMsg>) => {
-      console.log('onMessageReceived: ' + JSON.stringify(message));
-    });
+    bridgefyEmitter.addListener(
+      'onMessageReceived',
+      (message: BridgefyMessage<AppMsg>) => {
+        console.log('onMessageReceived: ' + JSON.stringify(message));
+      },
+    );
 
-    // This event is launched when a broadcast message has been received, the structure 
+    // This event is launched when a broadcast message has been received, the structure
     // of the dictionary received is explained in the appendix.
-    bridgefyEmitter.addListener('onBroadcastMessageReceived', (message: BridgefyMessage<AppMsg>) => {
-      console.log('onBroadcastMessageReceived: ' + JSON.stringify(message));
-      if (message.content.message) {
-        Alert.alert(
-          "Alert Title",
-          message.content.message,
-          [
+    bridgefyEmitter.addListener(
+      'onBroadcastMessageReceived',
+      (message: BridgefyMessage<AppMsg>) => {
+        console.log('onBroadcastMessageReceived: ' + JSON.stringify(message));
+        if (message.content.message) {
+          Alert.alert('Alert Title', message.content.message, [
             {
-              text: "Cancel",
-              onPress: () => console.log("Cancel Pressed"),
-              style: "cancel"
+              text: 'Cancel',
+              onPress: () => console.log('Cancel Pressed'),
+              style: 'cancel',
             },
-            { text: "OK", onPress: () => console.log("OK Pressed") }
-          ]
-        );
-      }
-    });
+            { text: 'OK', onPress: () => console.log('OK Pressed') },
+          ]);
+        }
+      },
+    );
 
     // This event is launched when a message could not be sent, it receives an error
     // whose structure will be explained in the appendix
-    bridgefyEmitter.addListener('onMessageFailed', (evt: MessageFailedEvent<AppMsg>) => {
-      console.log('onMessageFailed: ' + evt);
-      setMessages(
-        GiftedChat.append(
-          messages,
-          [systemMessage(`Send message failed: ${evt.description}`)]
-        )
-      );
-    });
+    bridgefyEmitter.addListener(
+      'onMessageFailed',
+      (evt: MessageFailedEvent<AppMsg>) => {
+        console.log('onMessageFailed: ' + evt);
+        setMessages(
+          GiftedChat.append(messages, [
+            systemMessage(`Send message failed: ${evt.description}`),
+          ]),
+        );
+      },
+    );
 
     // This event is launched when a message was sent, contains the message
     // itself, and the structure of message is explained in the appendix.
-    bridgefyEmitter.addListener('onMessageSent', (message: BridgefyMessage<AppMsg>) => {
-      console.log('onMessageSent: ' + JSON.stringify(message));
-    });
+    bridgefyEmitter.addListener(
+      'onMessageSent',
+      (message: BridgefyMessage<AppMsg>) => {
+        console.log('onMessageSent: ' + JSON.stringify(message));
+      },
+    );
 
-    // This event is launched when a message was received but it contains errors, 
+    // This event is launched when a message was received but it contains errors,
     // the structure for this kind of error is explained in the appendix.
     // This method is launched exclusively on Android.
-    bridgefyEmitter.addListener('onMessageReceivedException', (evt: MessageReceivedExceptionEvent<AppMsg>) => {
-      console.log('onMessageReceivedException: ' + evt);
-      setMessages(
-        GiftedChat.append(
-          messages,
-          [systemMessage(`Receive message error: ${evt.description}`)]
-        )
-      );
-    });
+    bridgefyEmitter.addListener(
+      'onMessageReceivedException',
+      (evt: MessageReceivedExceptionEvent<AppMsg>) => {
+        console.log('onMessageReceivedException: ' + evt);
+        setMessages(
+          GiftedChat.append(messages, [
+            systemMessage(`Receive message error: ${evt.description}`),
+          ]),
+        );
+      },
+    );
 
     //
     // Device listeners
-    //   
+    //
 
     // This event is launched when the service has been started successfully, it receives
     // a device dictionary that will be descripted in the appendix.
@@ -144,10 +157,9 @@ export default function App() {
       console.log('onStarted');
       setConnected(true);
       setMessages(
-        GiftedChat.append(
-          messages,
-          [systemMessage(`Bridgefy started successfully`)]
-        )
+        GiftedChat.append(messages, [
+          systemMessage(`Bridgefy started successfully`),
+        ]),
       );
     });
 
@@ -156,10 +168,9 @@ export default function App() {
     bridgefyEmitter.addListener('onStartError', (evt: StartErrorEvent) => {
       console.log('onStartError: ', evt);
       setMessages(
-        GiftedChat.append(
-          messages,
-          [systemMessage(`Bridgefy could not start: ${evt.message}`)]
-        )
+        GiftedChat.append(messages, [
+          systemMessage(`Bridgefy could not start: ${evt.message}`),
+        ]),
       );
     });
 
@@ -168,41 +179,44 @@ export default function App() {
       console.log('onStopped');
       setConnected(false);
       setMessages(
-        GiftedChat.append(
-          messages,
-          [systemMessage(`Bridgefy stopped`)]
-        )
+        GiftedChat.append(messages, [systemMessage(`Bridgefy stopped`)]),
       );
     });
 
     // This method is launched when a device is nearby and has established connection with the local user.
     // It receives a device dictionary.
-    bridgefyEmitter.addListener('onDeviceConnected', (evt: DeviceConnectedEvent) => {
-      console.log('onDeviceConnected: ' + JSON.stringify(evt));
-      setMessages(
-        GiftedChat.append(
-          messages,
-          [systemMessage(`Connected to device: ${evt.userId}`)]
-        )
-      );
-    });
+    bridgefyEmitter.addListener(
+      'onDeviceConnected',
+      (evt: DeviceConnectedEvent) => {
+        console.log('onDeviceConnected: ' + JSON.stringify(evt));
+        setMessages(
+          GiftedChat.append(messages, [
+            systemMessage(`Connected to device: ${evt.userId}`),
+          ]),
+        );
+      },
+    );
     // This method is launched when there is a disconnection of a user.
     bridgefyEmitter.addListener('onDeviceLost', (evt: DeviceLostEvent) => {
       console.log('onDeviceLost: ' + evt);
       setMessages(
-        GiftedChat.append(
-          messages,
-          [systemMessage(`Device lost: ${evt.userId}`)]
-        )
+        GiftedChat.append(messages, [
+          systemMessage(`Device lost: ${evt.userId}`),
+        ]),
       );
     });
 
     // This is method is launched exclusively on iOS devices, notifies about certain actions like when
     // the bluetooth interface  needs to be activated, when internet is needed and others.
-    bridgefyEmitter.addListener('onEventOccurred', (event: EventOccurredEvent) => {
-      console.log('Event code: ' + event.code + ' Description: ' + event.description);
-    });
-  }
+    bridgefyEmitter.addListener(
+      'onEventOccurred',
+      (event: EventOccurredEvent) => {
+        console.log(
+          'Event code: ' + event.code + ' Description: ' + event.description,
+        );
+      },
+    );
+  };
 
   let initBrdg = () => {
     function doInitBrdg() {
@@ -210,64 +224,64 @@ export default function App() {
         .then((brdgClient: BridgefyClient) => {
           setClient({
             _id: brdgClient.userUuid,
-            name: "Broadcast User",
-            avatar: 'https://unsplash.it/200/300/?random'
+            name: 'Broadcast User',
+            avatar: 'https://unsplash.it/200/300/?random',
           });
-          console.log("Brdg client = ", brdgClient);
-          RNBridgefy.start({ autoConnect: true, engineProfile: "BFConfigProfileDefault", energyProfile: "HIGH_PERFORMANCE", encryption: true });
+          console.log('Brdg client = ', brdgClient);
+          RNBridgefy.start({
+            autoConnect: true,
+            engineProfile: 'BFConfigProfileDefault',
+            energyProfile: 'HIGH_PERFORMANCE',
+            encryption: true,
+          });
         })
         .catch((e: Error) => {
           console.log(e);
           setMessages(
-            GiftedChat.append(
-              messages,
-              [systemMessage(`Bridgefy could not init: ${e.message}`)]
-            )
+            GiftedChat.append(messages, [
+              systemMessage(`Bridgefy could not init: ${e.message}`),
+            ]),
           );
         });
     }
-    if (Platform.OS == "android") {
-      PermissionsAndroid.requestMultiple(
-        [
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-        ]).then((result) => {
+    if (Platform.OS == 'android') {
+      PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+      ])
+        .then((result) => {
           if (
             result['android.permission.ACCESS_COARSE_LOCATION'] ||
             result['android.permission.ACCESS_FINE_LOCATION']
           ) {
             doInitBrdg();
-          }
-          else {
+          } else {
             setMessages(
-              GiftedChat.append(
-                messages,
-                [systemMessage(`Could not get required permissions to start Bridgefy`)]
-              )
+              GiftedChat.append(messages, [
+                systemMessage(
+                  `Could not get required permissions to start Bridgefy`,
+                ),
+              ]),
             );
           }
         })
         .catch((e: Error) => {
           setMessages(
-            GiftedChat.append(
-              messages,
-              [systemMessage(`Could not get required permissions to start Bridgefy: ${e.message}`)]
-            )
+            GiftedChat.append(messages, [
+              systemMessage(
+                `Could not get required permissions to start Bridgefy: ${e.message}`,
+              ),
+            ]),
           );
         });
-    }
-    else {
+    } else {
       doInitBrdg();
     }
-  }
+  };
 
   let onSend = (mesaage: String) => {
-
     if (!connected) {
-      Alert.alert(
-        "Bridgefy not ready",
-        "Your Bridgefy could not start yet"
-      );
+      Alert.alert('Bridgefy not ready', 'Your Bridgefy could not start yet');
       return false;
     }
 
@@ -282,15 +296,13 @@ export default function App() {
     // setMessages(nm);
 
     RNBridgefy.sendBroadcastMessage(message);
-  }
+  };
 
   useEffect(() => {
-
     initListeners();
     initBrdg();
 
     return function cleanup() {
-
       if (connected) {
         RNBridgefy.stop();
       }
@@ -298,56 +310,54 @@ export default function App() {
     };
   }, []);
 
-  return (<>
+  return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.text}>VACCINATION CENTRES</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            placeholder="7 digit pincode"
-            placeholderTextColor="#fff"
-            style={styles.input}
-          />
-          <TouchableOpacity
-          //  onPress={onPressSearchHandler}
-            style={styles.search}>
-            <Icon name="arrow-circle-right" size={25} color="#fff" />
-          </TouchableOpacity>
+      {/* <Register /> */}
+      <Login />
+      {/* <View style={styles.header}>
+          <Text style={styles.text}>VACCINATION CENTRES</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="6 digit pincode"
+              placeholderTextColor="#fff"
+              style={styles.input}
+            />
+            <TouchableOpacity
+              //  onPress={onPressSearchHandler}
+              style={styles.search}>
+              <Icon name="arrow-circle-right" size={25} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          <Button
+            onPress={() => onSend('Hi this is a test message')}
+            title="EMIT TEST MESSAGE"></Button>
+          <View>
+            <Text style={styles.text}>{MMKV.getString('userUid')}</Text>
+          </View>
         </View>
-        <Button onPress={() => onSend("Hi this is a test message")} title="EMIT TEST MESSAGE"></Button>
-        <View>
-          <Text style={styles.text}>{MMKV.getString("userUid")}</Text>
-        </View>
-      </View>
-      <View style={{ padding: 20, flex: 1 }}>
-        <VC_Card />
-      </View>
-      <BottomNavbar />
-    </View></>
-  )
+        <View style={{padding: 20, flex: 1}}>
+          <VC_Card />
+        </View> */}
+      {/* <BottomNavbar /> */}
+    </View>
+  );
 }
 
 const ChatFooter = (props: { connected: boolean }) => {
   let { connected } = props;
   return (
     <View style={connected ? styles.connected : styles.disconnected}>
-      { connected && (
-        <Text style={styles.connectedText}>
-          Bridgefy started
-        </Text>
-      )}
-      { !connected && (
-        <Text style={styles.disconnectedText}>
-          Bridgefy not started !
-        </Text>
+      {connected && <Text style={styles.connectedText}>Bridgefy started</Text>}
+      {!connected && (
+        <Text style={styles.disconnectedText}>Bridgefy not started !</Text>
       )}
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   connected: {
-    backgroundColor: 'rgba(22,255,22,.3)'
+    backgroundColor: 'rgba(22,255,22,.3)',
   },
   container: {
     flex: 1,
@@ -392,10 +402,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   disconnected: {
-    backgroundColor: 'rgba(255,22,22,.3)'
+    backgroundColor: 'rgba(255,22,22,.3)',
   },
   disconnectedText: {
     color: 'red',
     textAlign: 'center',
-  }
+  },
 });
