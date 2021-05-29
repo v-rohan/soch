@@ -19,6 +19,11 @@ headers = {
 class AppSessionViewSet(viewsets.ViewSet):
     # permission_classes = (AllowAny)
 
+    @action(detail=False, methods=['GET',])
+    def test(self, request):
+        return Response({"data": "OK"}, status=status.HTTP_200_OK)
+
+
     @action(detail=False, methods=['POST'])
     def getByPin(self, request):
         pincode = (request.data.get('pincode'))

@@ -6,7 +6,7 @@ from soch.celery import sms_scheduler, revoke_task
 from django.utils import timezone
 from datetime import timedelta
 from soch.settings import STATUS_CHECK_TIMEOUT
-
+import json
 
 class TaskMiddleWare():
     def __init__(self, get_response):
@@ -14,9 +14,11 @@ class TaskMiddleWare():
 
     def __call__(self, request):
         response = self.get_response(request)
-        if 'recieved' in request.path_info:
+        if 'recieved' not in request.path_info:
             try:
-                response['Task-Id'] = request.META["HTTP_TASK_ID"]
+                response.data['taskId'] = request.META["HTTP_TASK_ID"]
+                response._is_rendered = False 
+                response.render()
             except Exception:
                 pass
         return response
