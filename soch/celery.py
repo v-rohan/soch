@@ -3,6 +3,7 @@ import os
 from celery import Celery
 from django.conf import settings
 from celery import shared_task
+from account.twilio import broadcast_sms
 
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'soch.settings')
@@ -16,7 +17,7 @@ app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 @shared_task(bind=True, 
     name="task to check status after sometime", max_retries=3)
 def sms_scheduler(request, *args, **kwargs):
-    print(request)
+    broadcast_sms(request.user.username, "Resend query")
 
 
 def revoke_task(task_id):
