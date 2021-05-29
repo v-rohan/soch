@@ -35,13 +35,26 @@ class AppSessionViewSet(viewsets.ViewSet):
             time = "calendar"
         else:
             time = "find"
-        # r = requests.get(
-        #     f'{AAROGRA_SETU_API}/v2/appointment/sessions/public/{time}ByPin', params=params, headers=headers)
-        # print(r)
-        # if r.status_code == 200:
-        #     return Response({"detail": r.json()})
-        # else:
-        #     return Response({"error": "Input parameter missing"}, status=status.HTTP_400_BAD_REQUEST)
+        r = requests.get(
+            f'{AAROGRA_SETU_API}/v2/appointment/sessions/public/{time}ByPin', params=params, headers=headers)
+        print(r)
+        if r.status_code == 200:
+            return Response({"detail": r.json()})
+        else:
+            return Response({"error": "Input parameter missing"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+    @action(detail=False, methods=['POST'])
+    def getByPinDummy(self, request):
+        pincode = (request.data.get('pincode'))
+        date = datetime.date.fromisoformat(request.data.get('date', None)).strftime(
+            "%d-%m-%Y") if request.data.get('date', None) is not None else None
+        params = {"pincode": pincode, "date": date}
+        print(params)
+        if request.data.get('calendar', False):
+            time = "calendar"
+        else:
+            time = "find"
         if time == 'calendar':
             return Response({"detail": json.dumps({"centers": [{"center_id": 1234,"name": "District General Hostpital","name_l": "","address": "45 M G Road","address_l": "","state_name": "Maharashtra","state_name_l": "","district_name": "Satara","district_name_l": "","block_name": "Jaoli","block_name_l": "","pincode": "413608","lat": 28.7,"long": 77.1,"from": "09:00:00","to": "18:00:00","fee_type": "Free","vaccine_fees": [{"vaccine": "COVISHIELD","fee": "250"}],"sessions": [{"session_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6","date": "31-05-2021","available_capacity": 50,"available_capacity_dose1": 25,"available_capacity_dose2": 25,"min_age_limit": 18,"vaccine": "COVISHIELD","slots": ["FORENOON","AFTERNOON"]}]}]})}, status=status.HTTP_200_OK)
         else:
@@ -57,16 +70,30 @@ class AppSessionViewSet(viewsets.ViewSet):
             time = "calendar"
         else:
             time = "find"
-        # r = requests.get(
-        #     f'{AAROGRA_SETU_API}​/v2​/appointment​/sessions​/public​/{time}ByDistrict',  params=params, headers=headers)
-        # if r.status_code == 200:
-        #     return Response({"detail": r.json()})
-        # else:
-        #     return Response({"error": "Input parameter missing or invalid"}, status=status.HTTP_400_BAD_REQUEST)
+        r = requests.get(
+            f'{AAROGRA_SETU_API}​/v2​/appointment​/sessions​/public​/{time}ByDistrict',  params=params, headers=headers)
+        if r.status_code == 200:
+            return Response({"detail": r.json()})
+        else:
+            return Response({"error": "Input parameter missing or invalid"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+    @action(detail=False, methods=['POST'])
+    def getByDistrictDummy(self, request):
+        district_id = request.data.get('district')
+        date = datetime.date.fromisoformat(request.data.get('date', None)).strftime(
+            "%d-%m-%Y") if request.data.get('date', None) is not None else None
+        params = {"district_id": district_id, "date": date}
+        if request.data.get('calendar', False):
+            time = "calendar"
+        else:
+            time = "find"
         if time == 'calendar':
             return Response({"detail": json.dumps({"centers": [{"center_id": 1234,"name": "District General Hostpital","name_l": "","address": "45 M G Road","address_l": "","state_name": "Maharashtra","state_name_l": "","district_name": "Satara","district_name_l": "","block_name": "Jaoli","block_name_l": "","pincode": "413608","lat": 28.7,"long": 77.1,"from": "09:00:00","to": "18:00:00","fee_type": "Free","vaccine_fees": [  {    "vaccine": "COVISHIELD",    "fee": "250"  }],"sessions": [{"session_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6","date": "31-05-2021","available_capacity": 50,"available_capacity_dose1": 25,"available_capacity_dose2": 25,"min_age_limit": 18,"vaccine": "COVISHIELD","slots": ["FORENOON","AFTERNOON"]}]}]})}, status=status.HTTP_200_OK)
         else:
             return Response({"detail": json.dumps({"sessions": [{"center_id": 1234,"name": "District General Hostpital","name_l": "","address": "45 M G Road","address_l": "","state_name": "Maharashtra","state_name_l": "","district_name": "Satara","district_name_l": "","block_name": "Jaoli","block_name_l": "","pincode": "413608","lat": 28.7,"long": 77.1,"from": "09:00:00","to": "18:00:00","fee_type": "Paid","fee": "250","session_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6","date": "31-05-2021","available_capacity": 50,"available_capacity_dose1": 25,"available_capacity_dose2": 25,"min_age_limit": 18,"vaccine": "COVISHIELD","slots": ["FORENOON","AFTERNOON"]}]})}, status=status.HTTP_200_OK)
+
+
     @action(detail=False, methods=['POST'])
     def getCalendarByCenter(self, request):
         center_id = request.data.get('center_id')
