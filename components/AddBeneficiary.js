@@ -31,10 +31,10 @@ const AddBeneficiary = ({ beneficiaryRegHandler }) => {
     const data = {
       name: name,
       birth_year: birthYear,
-      gender_id: gender,
-      photo_id_type: idType,
+      gender_id: genders[gender].id,
+      photo_id_type: idTypes[idType].id,
       photo_id_number: idNumber,
-      comorbidity_ind: comorbidity,
+      comorbidity_ind: comordbidities[comorbidity].id,
       consent_version: '1',
       uuid: MMKV.getString("uuid"),
       refid: sha256(MMKV.getString("number"))
@@ -45,7 +45,7 @@ const AddBeneficiary = ({ beneficiaryRegHandler }) => {
     console.log(data);
     const done = await beneficiaryRegHandler(data)
     console.log(done)
-    if (done.status == 'false'|| done.status == false) {
+    if (done.status == 'false' || done.status == false) {
       Alert.alert("NEtwork error")
     }
     else if (done.status == 'pending') {
@@ -61,13 +61,17 @@ const AddBeneficiary = ({ beneficiaryRegHandler }) => {
           Alert.alert("Request failed")
           return;
         }
-        if (MMKV.getString("appData") === '1') {
+        if (JSON.parse(MMKV.getString("appData")).status === true) {
+          data['beneficiary_id'] = JSON.parse(MMKV.getString("appData")).beneficiary_id
+          MMKV.set("beneficiary", JSON.stringify(data))
           clearInterval(interval);
           history.push('/')
           return;
         }
       }, 200);
     } else {
+      data['beneficiary_id'] = done.beneficiary_id
+      MMKV.set("beneficiary", JSON.stringify(data))
       history.push("/")
     }
 

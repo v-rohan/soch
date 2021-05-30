@@ -11,8 +11,9 @@ const Home = () => {
       history.replace('/login')
   })
   let history = useHistory();
-  const showBeneficiary = MMKV.getString('beneficiary') != null;
-  const showBooking = MMKV.getString('booking') != null;
+  const showBeneficiary = MMKV.getString('beneficiary') != undefined;
+  const showBooking = MMKV.getString('booking') != undefined;
+  const gender = ["", "Male", "Female", "Others"]
   return (
     <>
       <View style={styles.header}>
@@ -25,10 +26,11 @@ const Home = () => {
           </Text>
           {showBeneficiary ? (
             <View style={styles.card}>
-              <Text style={styles.title}>NAME</Text>
-              <Text style={styles.address}>BIRTH YEAR</Text>
-              <Text style={styles.address}>ID NUMBER</Text>
-              <Text style={styles.time}>GENDER</Text>
+              <Text style={styles.title}>NAME:  {JSON.parse(MMKV.getString('beneficiary')).name}</Text>
+              <Text style={styles.address}>BIRTH YEAR: {JSON.parse(MMKV.getString('beneficiary')).birth_year}</Text>
+              <Text style={styles.address}>ID NUMBER: {JSON.parse(MMKV.getString('beneficiary')).photo_id_number}</Text>
+              <Text style={styles.address}>BENEFICIARY ID: {JSON.parse(MMKV.getString('beneficiary')).beneficiary_id}</Text>
+              <Text style={styles.time}>GENDER: {gender[JSON.parse(MMKV.getString('beneficiary')).gender_id]}</Text>
             </View>
           ) : (
             <>
@@ -44,7 +46,7 @@ const Home = () => {
               <TouchableOpacity
                 onPress={() => history.push('/beneficiary')}
                 style={styles.search}>
-                <Text style={{color: '#fff', marginRight: 10, fontSize: 16}}>
+                <Text style={{ color: '#fff', marginRight: 10, fontSize: 16 }}>
                   ADD BENIFICIARY
                 </Text>
                 <Icon name="plus-circle" size={25} color="#fff" />

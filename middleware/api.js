@@ -1,6 +1,6 @@
 import axios from 'axios';
-import {BACKEND_URL} from '@env';
-import {MMKV} from 'react-native-mmkv';
+import { BACKEND_URL } from '@env';
+import { MMKV } from 'react-native-mmkv';
 
 export const register = async (data) => {
   try {
@@ -25,7 +25,7 @@ export const login = async (data) => {
     });
     //const response = await res.json()
     console.log('api response', res.data);
-  //  MMKV.set('token', res.data.token);
+    //  MMKV.set('token', res.data.token);
     return res.data.token;
   } catch (error) {
     console.log('dddd' + error);
@@ -35,16 +35,16 @@ export const login = async (data) => {
 
 export const requestOTP = async (refId) => {
   try {
-    const res = await axios.get(`${BACKEND_URL}api/requestotp/`,{
+    const res = await axios.get(`${BACKEND_URL}api/requestotp/`, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': "Token "+ MMKV.getString("token"),
+        'Authorization': "Token " + MMKV.getString("token"),
         'REFERRER-ID': refId
       },
     });
     console.log(res.status)
-    if(res.status===200)
-    return true
+    if (res.status === 200)
+      return true
     else return false
   } catch (error) {
     console.log(error);
@@ -52,19 +52,20 @@ export const requestOTP = async (refId) => {
   }
 };
 
-export const addBenificiary = async(refid,data)=>{
+export const addBenificiary = async (refid, data) => {
   try {
-    const res = await axios.post(`${BACKEND_URL}api/base/register/`, data, {
+    const res = await axios.post(`${BACKEND_URL}api/base/add/`, data, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': "Token "+MMKV.getString("token"),
+        'Authorization': "Token " + MMKV.getString("token"),
         'Referrer-Id': refid
       },
     });
-    return { status: true, taskId: res.data.taskId}
+    console.log(res.data)
+    return { status: true, taskId: res.data.taskId, beneficiary_id: res.data.detail.beneficiary_id }
   } catch (error) {
     console.log(error);
-    return {status: false}
+    return { status: false }
   }
 }
 
@@ -73,14 +74,14 @@ export const verifyOTP = async (refid, data) => {
     const res = await axios.post(`${BACKEND_URL}api/submitotp/`, data, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': "Token "+MMKV.getString("token"),
+        'Authorization': "Token " + MMKV.getString("token"),
         'Referrer-Id': refid
       },
     });
-    return { status: true, taskId: res.data.taskId}
+    return { status: true, taskId: res.data.taskId }
   } catch (error) {
     console.log(error);
-    return {status: false}
+    return { status: false }
   }
 };
 

@@ -152,7 +152,7 @@ export default function App() {
                 ToastAndroid.SHORT,
               );
               // fiddle(taskId)
-              MMKV.set('appData', '1')
+              MMKV.set('appData', message.content.message)
             } else {
               MMKV.set('appData', '-1');
             }
