@@ -12,13 +12,19 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
-import { API_KEY } from '@env';
-import { MMKV } from 'react-native-mmkv';
-import { login, register, requestOTP, verifyOTP } from "./middleware/api"
+import {API_KEY} from '@env';
+import {MMKV} from 'react-native-mmkv';
+import {login, register, requestOTP, verifyOTP} from './middleware/api';
 import 'react-native-get-random-values';
 import {sha256} from 'js-sha256';
 import {v4 as uuid} from 'uuid';
-import {NativeRouter, Switch, Route, useHistory} from 'react-router-native';
+import {
+  NativeRouter,
+  Switch,
+  Route,
+  useHistory,
+  BackButton,
+} from 'react-router-native';
 
 import RNBridgefy, {BrdgNativeEventEmitter} from 'react-native-bridgefy';
 
@@ -353,11 +359,11 @@ export default function App() {
       const payload = {
         username: data.username,
         password: data.password,
-        password2: data.password2
-      }
-      const stat = await register(payload)
-      console.log(stat)
-      if (sha256(data.username) === sha256(MMKV.getString("number"))) {
+        password2: data.password2,
+      };
+      const stat = await register(payload);
+      console.log(stat);
+      if (sha256(data.username) === sha256(MMKV.getString('number'))) {
         if (stat !== false) {
           MMKV.set('token', stat);
           return {status: 'true'};
@@ -456,38 +462,40 @@ export default function App() {
 
   return (
     <NativeRouter>
-      <View style={styles.container}>
-        <Switch>
-          <Route exact path="/" render={(props) => <Home />} />
-          <Route
-            exact
-            path="/login"
-            render={(props) => <Login loginHandler={loginHandler} />}
-          />
-          <Route
-            exact
-            path="/register"
-            render={(props) => <Register registerHandler={registerHandler} />}
-          />
-          <Route
-            exact
-            path="/otp"
-            render={(props) => (
-              <OTP
-                otpRequestHandler={otpRequestHandler}
-                otpSubmitHandler={otpSubmitHandler}
-              />
-            )}
-          />
-          <Route exact path="/centres" render={(props) => <Centres />} />
-          <Route
-            exact
-            path="/beneficiary"
-            render={(props) => <AddBeneficiary />}
-          />
-          <Route exact path="/book" render={(props) => <BookSlot />} />
-        </Switch>
-      </View>
+      <BackButton>
+        <View style={styles.container}>
+          <Switch>
+            <Route exact path="/" render={(props) => <Home />} />
+            <Route
+              exact
+              path="/login"
+              render={(props) => <Login loginHandler={loginHandler} />}
+            />
+            <Route
+              exact
+              path="/register"
+              render={(props) => <Register registerHandler={registerHandler} />}
+            />
+            <Route
+              exact
+              path="/otp"
+              render={(props) => (
+                <OTP
+                  otpRequestHandler={otpRequestHandler}
+                  otpSubmitHandler={otpSubmitHandler}
+                />
+              )}
+            />
+            <Route exact path="/centres" render={(props) => <Centres />} />
+            <Route
+              exact
+              path="/beneficiary"
+              render={(props) => <AddBeneficiary />}
+            />
+            <Route exact path="/book" render={(props) => <BookSlot />} />
+          </Switch>
+        </View>
+      </BackButton>
     </NativeRouter>
   );
 }
