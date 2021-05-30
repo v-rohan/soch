@@ -16,7 +16,7 @@ class TaskMiddleWare():
         response = self.get_response(request)
         if 'admin' not in request.path_info \
         and 'login/' not in request.path_info \
-        and 'register/' not in request.path_info\
+        and 'api/register/' not in request.path_info\
         and 'requestotp/' not in request.path_info:
             if 'recieved' not in request.path_info:
                 try:
