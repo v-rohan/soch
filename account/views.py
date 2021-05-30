@@ -70,8 +70,8 @@ def submit_otp(request):
             'txnId': user_data.txnId,
             'otp': hashlib.sha256(otp.encode()).hexdigest()
         }
-        r = requests.post(
-            f'{AAROGRA_SETU_API}/v2/auth/public/confirmOTP', data=json.dumps(data))
+        url = f'{AAROGRA_SETU_API}/v2/auth/public/confirmOTP'
+        r = requests.post(url, headers=headers, data=json.dumps(data))
         if r.status_code == 200:
             user_data.token = r.json()['token']
             user_data.save()
