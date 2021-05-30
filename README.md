@@ -62,8 +62,8 @@ Build instructions:
 
 ## **Screenshots**
 
-<img src="screenshots/login.jpg" style="zoom: 50%" />
+<img src="screenshots/login.jpg" style="zoom: 20%" />
 
-<img src="screenshots/beneficiary.jpg" style="zoom: 50%" />
+<img src="screenshots/beneficiary.jpg" style="zoom: 20%" />
 
-<img src="screenshots/home.jpg" style="zoom: 50%" />
+<img src="screenshots/home.jpg" style="zoom: 20%" />
