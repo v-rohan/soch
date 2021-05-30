@@ -1,11 +1,18 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {View, StyleSheet, Text, TouchableOpacity} from 'react-native';
 import {ScrollView} from 'react-native-gesture-handler';
+import {MMKV} from 'react-native-mmkv';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import {useHistory} from 'react-router-native';
-import {MMKV} from 'react-native-mmkv';
 
 const Home = () => {
+  useEffect(() => {
+    if (
+      MMKV.getString('token') === undefined ||
+      MMKV.getString('number') === undefined
+    )
+      history.replace('/login');
+  });
   let history = useHistory();
   const showBeneficiary = MMKV.getString('beneficiary') != null;
   const showBooking = MMKV.getString('booking') != null;

@@ -42,7 +42,7 @@ const OTP = ({ otpRequestHandler, otpSubmitHandler }) => {
         console.log(data);
         const done = await otpRequestHandler(data)
         console.log(done)
-        if (done.status == 'false') {
+        if (done.status == 'false' || done.status == false) {
             Alert.alert("Error in OTP generation. Try again later")
         }
         else if (done.status == 'pending') {
@@ -77,7 +77,7 @@ const OTP = ({ otpRequestHandler, otpSubmitHandler }) => {
         console.log(data);
         const done = await otpSubmitHandler(data)
         console.log(done)
-        if (done.status == 'false') {
+        if (done.status == 'false' || done.status == false) {
             Alert.alert("OTP timed out")
         }
         else if (done.status == 'pending') {
@@ -93,9 +93,14 @@ const OTP = ({ otpRequestHandler, otpSubmitHandler }) => {
                     Alert.alert("OTP timed out")
                     return;
                 }
+                else if (MMKV.getString("appData") === '1') {
+                    clearInterval(interval);
+                    history.push('/')
+                    return;
+                }
             }, 200);
         } else {
-            history.push('/home')
+            history.push('/')
         }
     };
 

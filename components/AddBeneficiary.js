@@ -5,38 +5,90 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Alert
 } from 'react-native';
-import {ScrollView} from 'react-native-gesture-handler';
+import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import RadioForm, {
   RadioButton,
   RadioButtonInput,
   RadioButtonLabel,
 } from 'react-native-simple-radio-button';
+import { sha256 } from 'js-sha256';
+import { MMKV } from 'react-native-mmkv';
+import { useHistory } from 'react-router-native'
 
-const AddBeneficiary = () => {
+const AddBeneficiary = ({ beneficiaryRegHandler }) => {
   const [name, onChangeName] = React.useState(null);
   const [birthYear, onChangeBirthYear] = React.useState(null);
   const [gender, setGender] = React.useState(null);
   const [idType, setIdType] = React.useState(null);
+  const history = useHistory();
   const [idNumber, onChangeIdNumber] = React.useState(null);
   const [comorbidity, setComorbidity] = React.useState(null);
 
+  const onPressHandler = async () => {
+    const data = {
+      name: name,
+      birth_year: birthYear,
+      gender_id: gender,
+      photo_id_type: idType,
+      photo_id_number: idNumber,
+      comorbidity_ind: comorbidity,
+      consent_version: '1',
+      uuid: MMKV.getString("uuid"),
+      refid: sha256(MMKV.getString("number"))
+    };
+    //MMKV.set("number", mobileNum)
+    MMKV.set("currentAction", "add-ben")
+    MMKV.delete("appData")
+    console.log(data);
+    const done = await beneficiaryRegHandler(data)
+    console.log(done)
+    if (done.status == 'false'|| done.status == false) {
+      Alert.alert("NEtwork error")
+    }
+    else if (done.status == 'pending') {
+      var startTime = new Date().getTime();
+      var interval = setInterval(function () {
+        if (new Date().getTime() - startTime > 180000) {
+          clearInterval(interval);
+          Alert.alert("Request time out")
+          return;
+        }
+        if (MMKV.getString("appData") === '-1') {
+          clearInterval(interval);
+          Alert.alert("Request failed")
+          return;
+        }
+        if (MMKV.getString("appData") === '1') {
+          clearInterval(interval);
+          history.push('/')
+          return;
+        }
+      }, 200);
+    } else {
+      history.push("/")
+    }
+
+
+  };
+
   const genders = [
-    {label: 'Male', value: 0, id: 1},
-    {label: 'Female', value: 1, id: 2},
-    {label: 'Others', value: 2, id: 3},
+    { label: 'Male', value: 0, id: 1 },
+    { label: 'Female', value: 1, id: 2 },
+    { label: 'Others', value: 2, id: 3 },
   ];
 
   const idTypes = [
-    {label: 'Aadhar Card', value: 0, id: 1},
-    {label: 'PAN Card', value: 1, id: 6},
-    {label: 'Driving License', value: 2, id: 2},
+    { label: 'Aadhar Card', value: 0, id: 1 },
+    { label: 'PAN Card', value: 1, id: 6 },
+    { label: 'Driving License', value: 2, id: 2 },
   ];
 
   const comordbidities = [
-    {label: 'YES', value: 0, id: 'Y'},
-    {label: 'NO', value: 1, id: 'N'},
+    { label: 'YES', value: 0, id: 'Y' },
+    { label: 'NO', value: 1, id: 'N' },
   ];
 
   return (
@@ -45,7 +97,7 @@ const AddBeneficiary = () => {
         <Text style={styles.text}>BENEFICIARY FORM</Text>
       </View>
       <ScrollView>
-        <View style={{padding: 15}}>
+        <View style={{ padding: 15 }}>
           <TextInput
             value={name}
             onChangeText={(text) => onChangeName(text)}
@@ -61,7 +113,7 @@ const AddBeneficiary = () => {
             placeholderTextColor="#fff"
             keyboardType="number-pad"
           />
-          <Text style={{color: '#fff', fontSize: 18, marginVertical: 15}}>
+          <Text style={{ color: '#fff', fontSize: 18, marginVertical: 15 }}>
             GENDER
           </Text>
           <RadioForm formHorizontal={true} animation={true}>
@@ -84,12 +136,12 @@ const AddBeneficiary = () => {
                   index={i}
                   labelHorizontal={true}
                   onPress={(val) => setGender(val)}
-                  labelStyle={{fontSize: 16, color: '#fff', marginRight: 12}}
+                  labelStyle={{ fontSize: 16, color: '#fff', marginRight: 12 }}
                 />
               </RadioButton>
             ))}
           </RadioForm>
-          <Text style={{color: '#fff', fontSize: 18, marginVertical: 15}}>
+          <Text style={{ color: '#fff', fontSize: 18, marginVertical: 15 }}>
             ID Type
           </Text>
           <RadioForm animation={true}>
@@ -112,7 +164,7 @@ const AddBeneficiary = () => {
                   index={i}
                   labelHorizontal={true}
                   onPress={(val) => setIdType(val)}
-                  labelStyle={{fontSize: 16, color: '#fff'}}
+                  labelStyle={{ fontSize: 16, color: '#fff' }}
                 />
               </RadioButton>
             ))}
@@ -120,12 +172,12 @@ const AddBeneficiary = () => {
           <TextInput
             value={idNumber}
             onChangeText={(text) => onChangeIdNumber(text)}
-            style={[styles.input, {marginTop: 20}]}
+            style={[styles.input, { marginTop: 20 }]}
             placeholder="ID Number"
             placeholderTextColor="#fff"
             keyboardType="number-pad"
           />
-          <Text style={{color: '#fff', fontSize: 18, marginVertical: 15}}>
+          <Text style={{ color: '#fff', fontSize: 18, marginVertical: 15 }}>
             Have Comorbidity?
           </Text>
           <RadioForm formHorizontal={true} animation={true}>
@@ -148,13 +200,13 @@ const AddBeneficiary = () => {
                   index={i}
                   labelHorizontal={true}
                   onPress={(val) => setComorbidity(val)}
-                  labelStyle={{fontSize: 16, color: '#fff', marginRight: 12}}
+                  labelStyle={{ fontSize: 16, color: '#fff', marginRight: 12 }}
                 />
               </RadioButton>
             ))}
           </RadioForm>
-          <TouchableOpacity onPress={() => {}} style={styles.search}>
-            <Text style={{color: '#fff', marginRight: 10, fontSize: 16}}>
+          <TouchableOpacity onPress={onPressHandler} style={styles.search}>
+            <Text style={{ color: '#fff', marginRight: 10, fontSize: 16 }}>
               ADD BENIFICIARY
             </Text>
             <Icon name="plus-circle" size={25} color="#fff" />
