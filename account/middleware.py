@@ -26,17 +26,6 @@ class TaskMiddleWare():
                     response.render()
                 except Exception:
                     pass
-            # if 'login' in request.path_info or 'register' in request.path_info:
-            #     now = timezone.now()
-            #     exec_time = now + timedelta(seconds=STATUS_CHECK_TIMEOUT)
-            #     task = sms_scheduler.apply_async(({
-            #         'user': request.user.pk,
-            #         'path_info': request.path_info
-            #     }, ), eta=exec_time)
-            #     response.data['taskId'] = task.id
-            #     response.data['referrerId'] = request.META['HTTP_REFERRER_ID']
-            #     response._is_rendered = False 
-            #     response.render()
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
