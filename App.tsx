@@ -14,9 +14,6 @@ import {
 } from 'react-native';
 import { API_KEY } from '@env';
 import { MMKV } from 'react-native-mmkv';
-import Icon from 'react-native-vector-icons/FontAwesome5';
-import BottomNavbar from './components/BottomNavbar';
-import VC_Card from './components/VC_Card';
 import { login, register, requestOTP, verifyOTP } from "./middleware/api"
 import 'react-native-get-random-values';
 import { sha256 } from 'js-sha256';
@@ -364,6 +361,7 @@ export default function App() {
         password2: data.password2
       }
       const stat = await register(payload)
+      console.log(stat)
       if (sha256(data.username) === sha256(MMKV.getString("number"))) {
         if (stat !== false) {
           MMKV.set('token', stat);

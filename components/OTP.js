@@ -18,7 +18,7 @@ const window = Dimensions.get('window');
 const screen = Dimensions.get('screen');
 
 const OTP = ({ otpRequestHandler, otpSubmitHandler }) => {
-    const [OTP, onChangeOTP] = React.useState("");
+    const [OTPdata, onChangeOTP] = React.useState("");
     let history = useHistory();
     const [dimensions, setDimensions] = React.useState({ window, screen });
 
@@ -67,13 +67,13 @@ const OTP = ({ otpRequestHandler, otpSubmitHandler }) => {
     };
 
     const onPressHandler2 = async () => {
+        console.log("heun")
         const data = {
-            otp: otp,
+            otp: OTPdata,
             refid: sha256(MMKV.getString("number")),
             uuid: MMKV.getString("uuid")
         };
-        MMKV.set("number", mobileNum)
-        MMKV.set("currentAction", "login")
+        MMKV.set("currentAction", "ver-otp")
         console.log(data);
         const done = await otpSubmitHandler(data)
         console.log(done)
@@ -105,6 +105,12 @@ const OTP = ({ otpRequestHandler, otpSubmitHandler }) => {
                 <Text style={styles.text}>OTP</Text>
             </View>
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <TouchableOpacity onPress={onPressHandler} style={styles.search}>
+                    <Text style={{ color: '#fff', marginRight: 10, fontSize: 17 }}>
+                        LOGIN
+                        </Text>
+                    <Icon name="arrow-circle-right" size={25} color="#fff" />
+                </TouchableOpacity>
                 <View
                     style={[
                         styles.centerContainer,
@@ -113,15 +119,9 @@ const OTP = ({ otpRequestHandler, otpSubmitHandler }) => {
                             height: dimensions.window.height * 0.3,
                         },
                     ]}>
-                    <TouchableOpacity onPress={onPressHandler} style={styles.search}>
-                        <Text style={{ color: '#fff', marginRight: 10, fontSize: 17 }}>
-                            LOGIN
-                        </Text>
-                        <Icon name="arrow-circle-right" size={25} color="#fff" />
-                    </TouchableOpacity>
                     <TextInput
-                        value={OTP}
-                        onChangeText={(text) => onChangeOTP(text)}
+                        value={OTPdata}
+                        onChangeText={(OTPdata) => onChangeOTP(OTPdata)}
                         placeholder="Enter Cowin OTP"
                         placeholderTextColor="#fff"
                         style={styles.input}

@@ -10,7 +10,7 @@ export const register = async (data) => {
       },
     });
     console.log('api response', res.data);
-    return res.data.token;
+    return res.data.detail.token;
   } catch (error) {
     console.log(error);
     return false;
@@ -35,11 +35,11 @@ export const login = async (data) => {
 
 export const requestOTP = async (refId) => {
   try {
-    const res = await axios.get(`${BACKEND_URL}api/requestOTP/`, {
+    const res = await axios.get(`${BACKEND_URL}api/requestotp/`,{
       headers: {
         'Content-Type': 'application/json',
         'Authorization': "Token "+ MMKV.getString("token"),
-        'Referrer-Id': refId
+        'REFERRER-ID': refId
       },
     });
     console.log(res.status)
