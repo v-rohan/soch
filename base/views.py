@@ -183,3 +183,13 @@ def book_appointment(request):
         return Response({"error": r.status_code}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response({'error': 'Provide the necessary details'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def book_appointment_dummy(request):
+    user = CowinData.objects.get(user=request.user)
+    dose = request.data.get('dose')
+    slot = request.data.get('slot')
+    session_id = request.data.get('session')
+    return Response({"detail": json.dumps({"appointment_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"})})
