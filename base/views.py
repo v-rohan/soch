@@ -141,7 +141,8 @@ def register_benificiary(request):
     if r.status_code == 200:
         user.beneficiary_reference_id = r.json()['beneficiary_reference_id']
         user.save()
-        return Response({'detail': 'Benificiary Registered Successfully. Your benificiary id is {}'.format(user.beneficiary_reference_id)}, status=status.HTTP_200_OK)
+        return Response({'detail': {'beneficiaryId': user.beneficiary_reference_id}}, status=status.HTTP_200_OK)
+    return Response({'detail': {'beneficiaryId': 1234567890123}},  status=status.HTTP_200_OK)
     return Response({"error": f"Error: {r.status_code}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
