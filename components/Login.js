@@ -40,6 +40,7 @@ const Login = ({ loginHandler }) => {
     };
     MMKV.set("number", mobileNum)
     MMKV.set("currentAction","login")
+    MMKV.delete("appData")
     console.log(data);
     const done = await loginHandler(data)
     console.log(done)
@@ -57,6 +58,11 @@ const Login = ({ loginHandler }) => {
         if (MMKV.getString("appData") === '-1') {
           clearInterval(interval);
           Alert.alert("Failure to Login2")
+          return;
+        }
+        if (MMKV.getString("appData") === '1') {
+          clearInterval(interval);
+          history.push('/otp')
           return;
         }
       }, 200);

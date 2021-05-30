@@ -61,8 +61,14 @@ const Register = ({ registerHandler }) => {
           Alert.alert("Failure to Register")
           return;
         }
+        else if (MMKV.getString("appData") === '1') {
+          clearInterval(interval);
+          history.push("/otp")
+          return;
+        }
+
       }, 200);
-    }else{
+    } else {
       history.push("/otp")
     }
   };

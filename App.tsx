@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Platform,
   View,
@@ -9,18 +9,19 @@ import {
   NativeEventEmitter,
   ToastAndroid,
   PermissionsAndroid,
+  NativeModules,
   TextInput,
   TouchableOpacity,
 } from 'react-native';
 import { API_KEY } from '@env';
 import { MMKV } from 'react-native-mmkv';
-import { login, register, requestOTP, verifyOTP } from "./middleware/api"
+import { addBenificiary, login, register, requestOTP, verifyOTP } from "./middleware/api"
 import 'react-native-get-random-values';
-import {sha256} from 'js-sha256';
-import {v4 as uuid} from 'uuid';
-import {NativeRouter, Switch, Route, useHistory} from 'react-router-native';
+import { sha256 } from 'js-sha256';
+import { v4 as uuid } from 'uuid';
+import { NativeRouter, Switch, Route } from 'react-router-native';
 
-import RNBridgefy, {BrdgNativeEventEmitter} from 'react-native-bridgefy';
+import RNBridgefy, { BrdgNativeEventEmitter } from 'react-native-bridgefy';
 
 const BRDG_LICENSE_KEY: string = API_KEY;
 // import Register from './components/Register';
@@ -42,6 +43,12 @@ import Home from './components/Home';
 import Centres from './components/Centres';
 import AddBeneficiary from './components/AddBeneficiary';
 import BookSlot from './components/BookSlot';
+const host = NativeModules.SourceCode.scriptURL.split('://')[1].split(':')[0];
+import Reactotron from 'reactotron-react-native'
+
+  Reactotron.configure({ host })
+  .useReactNative()
+  .connect();
 
 const bridgefyEmitter: BrdgNativeEventEmitter = new NativeEventEmitter(
   RNBridgefy,
@@ -61,7 +68,7 @@ export default function App() {
   const connectedState = useState(false);
   connected = connectedState[0];
   setConnected = connectedState[1];
-  let history = useHistory();
+  // let history = useHistory();
 
   let clearListeners = () => {
     bridgefyEmitter.removeAllListeners('onMessageReceived');
@@ -92,7 +99,7 @@ export default function App() {
               ToastAndroid.show('LOGIN SUCCESSFUL', ToastAndroid.SHORT);
               MMKV.delete('token');
               MMKV.set('token', data.token);
-              history.push('/otp');
+              MMKV.set('appData', '1')
             } else {
               MMKV.set('appData', '-1');
             }
@@ -103,9 +110,8 @@ export default function App() {
               ToastAndroid.show('REGISTRATION SUCCESFUL', ToastAndroid.SHORT);
               MMKV.delete('token');
               MMKV.set('token', data.token);
-              history.push('/otp');
+              MMKV.set('appData', '1');
             } else {
-              console.log('hein');
               MMKV.set('appData', '-1');
             }
           } else if (message.content.type === 'req-otp') {
@@ -125,7 +131,21 @@ export default function App() {
                 ToastAndroid.SHORT,
               );
               // fiddle(taskId)
-              history.push('/home');
+              MMKV.set('appData', '1')
+              //history.push('/home');
+            } else {
+              MMKV.set('appData', '-1');
+            }
+          } else if (message.content.type === 'add-ben') {
+            let data = JSON.parse(message.content.message);
+            console.log(data);
+            if (data.status === true) {
+              ToastAndroid.show(
+                'Benificiary Added successfully',
+                ToastAndroid.SHORT,
+              );
+              // fiddle(taskId)
+              MMKV.set('appData', '1')
             } else {
               MMKV.set('appData', '-1');
             }
@@ -149,6 +169,8 @@ export default function App() {
           otpRequestHandler(JSON.parse(message.content.message));
         } else if (message.content.type === 'ver-otp') {
           otpSubmitHandler(JSON.parse(message.content.message));
+        } else if (message.content.type === 'add-ben') {
+          beneficiaryRegHandler(JSON.parse(message.content.message));
         }
       },
     );
@@ -275,7 +297,7 @@ export default function App() {
     }
 
     var message = {
-      content: {type: type, message: mesaage, time: Date.now(), uuid: uuid},
+      content: { type: type, message: mesaage, time: Date.now(), uuid: uuid },
     };
 
     RNBridgefy.sendBroadcastMessage(message);
@@ -293,7 +315,7 @@ export default function App() {
     }
 
     var message = {
-      content: {type: type, message: mesaage, time: Date.now(), uuid: uuid},
+      content: { type: type, message: mesaage, time: Date.now(), uuid: uuid },
       receiver_id: originaluuid,
     };
     RNBridgefy.sendMessage(message);
@@ -321,19 +343,19 @@ export default function App() {
       if (sha256(data.username) === sha256(MMKV.getString('number'))) {
         if (stat !== false) {
           MMKV.set('token', stat);
-          return {status: 'true'};
-        } else return {status: 'false'};
+          return { status: 'true' };
+        } else return { status: 'false' };
       } else {
         if (stat !== false) {
           OnSendMessage(
-            JSON.stringify({status: true, token: stat}),
+            JSON.stringify({ status: true, token: stat }),
             'login',
             MMKV.getString('uuid'),
             data.uuid,
           );
         } else {
           OnSendMessage(
-            JSON.stringify({status: false}),
+            JSON.stringify({ status: false }),
             'login',
             MMKV.getString('uuid'),
             data.uuid,
@@ -343,7 +365,7 @@ export default function App() {
     } else {
       console.log('offline');
       onSendBroadcast(JSON.stringify(data), 'login', data.uuid);
-      return {status: 'pending'};
+      return { status: 'pending' };
     }
   };
 
@@ -360,19 +382,19 @@ export default function App() {
       if (sha256(data.username) === sha256(MMKV.getString("number"))) {
         if (stat !== false) {
           MMKV.set('token', stat);
-          return {status: 'true'};
-        } else return {status: 'false'};
+          return { status: 'true' };
+        } else return { status: 'false' };
       } else {
         if (stat !== false) {
           OnSendMessage(
-            JSON.stringify({status: true, token: stat}),
+            JSON.stringify({ status: true, token: stat }),
             'register-soch',
             MMKV.getString('uuid'),
             data.uuid,
           );
         } else {
           OnSendMessage(
-            JSON.stringify({status: false}),
+            JSON.stringify({ status: false }),
             'register-soch',
             MMKV.getString('uuid'),
             data.uuid,
@@ -382,7 +404,7 @@ export default function App() {
     } else {
       console.log('offline');
       onSendBroadcast(JSON.stringify(data), 'register-soch', data.uuid);
-      return {status: 'pending'};
+      return { status: 'pending' };
     }
   };
 
@@ -392,19 +414,19 @@ export default function App() {
       const stat = await requestOTP(data.refid);
       if (data.refid === sha256(MMKV.getString('number'))) {
         if (stat !== false) {
-          return {status: 'true'};
-        } else return {status: 'false'};
+          return { status: 'true' };
+        } else return { status: 'false' };
       } else {
         if (stat !== false) {
           OnSendMessage(
-            JSON.stringify({status: true}),
+            JSON.stringify({ status: true }),
             'req-otp',
             MMKV.getString('uuid'),
             data.uuid,
           );
         } else {
           OnSendMessage(
-            JSON.stringify({status: false}),
+            JSON.stringify({ status: false }),
             'req-otp',
             MMKV.getString('uuid'),
             data.uuid,
@@ -414,7 +436,7 @@ export default function App() {
     } else {
       console.log('offline');
       onSendBroadcast(JSON.stringify(data), 'req-otp', data.uuid);
-      return {status: 'pending'};
+      return { status: 'pending' };
     }
   };
 
@@ -438,7 +460,37 @@ export default function App() {
     } else {
       console.log('offline');
       onSendBroadcast(JSON.stringify(data), 'ver-otp', data.uuid);
-      return {status: 'pending'};
+      return { status: 'pending' };
+    }
+  };
+
+  let beneficiaryRegHandler = async (data: Object) => {
+    if ((await checkInternet()) == true) {
+      console.log('online');
+      const payload = {
+        name: data.name,
+        birth_year: data.birth_year,
+        gender_id: data.gender_id,
+        photo_id_type: data.photo_id_type,
+        photo_id_number: data.photo_id_number,
+        comorbidity_ind: data.comorbidity_ind,
+        consent_version: data.consent_version
+      };
+      const stat = await addBenificiary(data.refid, payload);
+      if (data.refid === sha256(MMKV.getString('number'))) {
+        return stat;
+      } else {
+        OnSendMessage(
+          JSON.stringify(stat),
+          'add-ben',
+          MMKV.getString('uuid'),
+          data.uuid,
+        );
+      }
+    } else {
+      console.log('offline');
+      onSendBroadcast(JSON.stringify(data), 'add-ben', data.uuid);
+      return { status: 'pending' };
     }
   };
 
@@ -483,7 +535,7 @@ export default function App() {
           <Route
             exact
             path="/beneficiary"
-            render={(props) => <AddBeneficiary />}
+            render={(props) => <AddBeneficiary beneficiaryRegHandler={beneficiaryRegHandler} />}
           />
           <Route exact path="/book" render={(props) => <BookSlot />} />
         </Switch>

@@ -1,17 +1,24 @@
-import React from 'react';
-import {View, StyleSheet, Text, TouchableOpacity} from 'react-native';
-import {ScrollView} from 'react-native-gesture-handler';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
+import { MMKV } from 'react-native-mmkv';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { useHistory } from "react-router-native"
 
 const Home = () => {
+  const history = useHistory();
+  useEffect(() => {
+    if (MMKV.getString("token") === undefined || MMKV.getString("number") === undefined)
+      history.replace('/login')
+  })
   return (
     <>
       <View style={styles.header}>
         <Text style={styles.text}>HOME</Text>
       </View>
-      <ScrollView style={{padding: 15}}>
+      <ScrollView style={{ padding: 15 }}>
         <View>
-          <Text style={{color: '#fff', fontSize: 18, marginBottom: 5}}>
+          <Text style={{ color: '#fff', fontSize: 18, marginBottom: 5 }}>
             BENEFICIARY INFO
           </Text>
           <View style={styles.card}>
@@ -20,8 +27,8 @@ const Home = () => {
             <Text style={styles.address}>ID NUMBER</Text>
             <Text style={styles.time}>GENDER</Text>
           </View>
-          <TouchableOpacity onPress={() => {}} style={styles.search}>
-            <Text style={{color: '#fff', marginRight: 10, fontSize: 16}}>
+          <TouchableOpacity onPress={() => history.push('/beneficiary')} style={styles.search}>
+            <Text style={{ color: '#fff', marginRight: 10, fontSize: 16 }}>
               ADD BENIFICIARY
             </Text>
             <Icon name="plus-circle" size={25} color="#fff" />
@@ -78,8 +85,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
   },
-  address: {color: '#fff'},
-  time: {marginTop: 10, color: '#9F9EEC'},
+  address: { color: '#fff' },
+  time: { marginTop: 10, color: '#9F9EEC' },
   search: {
     padding: 12,
     // flex: 1,

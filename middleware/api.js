@@ -52,6 +52,22 @@ export const requestOTP = async (refId) => {
   }
 };
 
+export const addBenificiary = async(refid,data)=>{
+  try {
+    const res = await axios.post(`${BACKEND_URL}api/base/register/`, data, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': "Token "+MMKV.getString("token"),
+        'Referrer-Id': refid
+      },
+    });
+    return { status: true, taskId: res.data.taskId}
+  } catch (error) {
+    console.log(error);
+    return {status: false}
+  }
+}
+
 export const verifyOTP = async (refid, data) => {
   try {
     const res = await axios.post(`${BACKEND_URL}api/submitotp/`, data, {
