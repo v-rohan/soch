@@ -141,8 +141,8 @@ def register_benificiary(request):
     if r.status_code == 200:
         user.beneficiary_reference_id = r.json()['beneficiary_reference_id']
         user.save()
-        return Response({'detail': {'beneficiaryId': user.beneficiary_reference_id}}, status=status.HTTP_200_OK)
-    return Response({'detail': {'beneficiaryId': 1234567890123}},  status=status.HTTP_200_OK)
+        return Response({'detail': {'beneficiary_id': user.beneficiary_reference_id}}, status=status.HTTP_200_OK)
+    return Response({'detail': {'beneficiary_id': 1234567890123}},  status=status.HTTP_200_OK)
     return Response({"error": f"Error: {r.status_code}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -181,7 +181,7 @@ def book_appointment(request):
             user.save()
 
             return Response({'detail': dose}, status=status.HTTP_200_OK)
-        return Response({'detail': "3fa85f64-5717-4562-b3fc-2c963f66afa6"}, status=status.HTTP_200_OK)
+        return Response({'detail': {"appointment_id" :"3fa85f64-5717-4562-b3fc-2c963f66afa6"}}, status=status.HTTP_200_OK)
         return Response({"error": r.status_code}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response({'error': 'Provide the necessary details'}, status=status.HTTP_400_BAD_REQUEST)
