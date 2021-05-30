@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Platform,
   View,
@@ -12,18 +12,18 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
-import { API_KEY } from '@env';
-import { MMKV } from 'react-native-mmkv';
+import {API_KEY} from '@env';
+import {MMKV} from 'react-native-mmkv';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import BottomNavbar from './components/BottomNavbar';
 import VC_Card from './components/VC_Card';
-import { login, register, requestOTP, verifyOTP } from "./middleware/api"
+import {login, register, requestOTP, verifyOTP} from './middleware/api';
 import 'react-native-get-random-values';
-import { sha256 } from 'js-sha256';
-import { v4 as uuid } from 'uuid';
-import { NativeRouter, Switch, Route, useHistory } from 'react-router-native';
+import {sha256} from 'js-sha256';
+import {v4 as uuid} from 'uuid';
+import {NativeRouter, Switch, Route, useHistory} from 'react-router-native';
 
-import RNBridgefy, { BrdgNativeEventEmitter } from 'react-native-bridgefy';
+import RNBridgefy, {BrdgNativeEventEmitter} from 'react-native-bridgefy';
 
 const BRDG_LICENSE_KEY: string = API_KEY;
 // import Register from './components/Register';
@@ -41,9 +41,13 @@ import {
 import Register from './components/Register';
 import Login from './components/Login';
 import OTP from './components/OTP';
+import Home from './components/Home';
+import Centres from './components/Centres';
+import AddBeneficiary from './components/AddBeneficiary';
+import BookSlot from './components/BookSlot';
 
 const bridgefyEmitter: BrdgNativeEventEmitter = new NativeEventEmitter(
-  RNBridgefy
+  RNBridgefy,
 );
 
 var connected: boolean;
@@ -88,50 +92,45 @@ export default function App() {
             let data = JSON.parse(message.content.message);
             console.log(data);
             if (data.status === true) {
-              ToastAndroid.show("LOGIN SUCCESSFUL", ToastAndroid.SHORT)
-              MMKV.delete("token")
-              MMKV.set("token", data.token)
-              history.push("/otp")
+              ToastAndroid.show('LOGIN SUCCESSFUL', ToastAndroid.SHORT);
+              MMKV.delete('token');
+              MMKV.set('token', data.token);
+              history.push('/otp');
+            } else {
+              MMKV.set('appData', '-1');
             }
-            else {
-              MMKV.set("appData", "-1")
-            }
-          }
-          else if (message.content.type === "register-soch") {
-            let data = JSON.parse(message.content.message)
-            console.log(data)
+          } else if (message.content.type === 'register-soch') {
+            let data = JSON.parse(message.content.message);
+            console.log(data);
             if (data.status === true) {
-              ToastAndroid.show("REGISTRATION SUCCESFUL", ToastAndroid.SHORT)
-              MMKV.delete("token")
-              MMKV.set("token", data.token)
-              history.push("/otp")
+              ToastAndroid.show('REGISTRATION SUCCESFUL', ToastAndroid.SHORT);
+              MMKV.delete('token');
+              MMKV.set('token', data.token);
+              history.push('/otp');
+            } else {
+              console.log('hein');
+              MMKV.set('appData', '-1');
             }
-            else {
-              console.log("hein")
-              MMKV.set("appData", "-1")
-            }
-
-          }
-          else if (message.content.type === "req-otp"){
-            let data = JSON.parse(message.content.message)
-            console.log(data)
+          } else if (message.content.type === 'req-otp') {
+            let data = JSON.parse(message.content.message);
+            console.log(data);
             if (data.status === true) {
-              ToastAndroid.show("CHECK SMS APP FOR OTP", ToastAndroid.SHORT)
+              ToastAndroid.show('CHECK SMS APP FOR OTP', ToastAndroid.SHORT);
+            } else {
+              MMKV.set('appData', '-1');
             }
-            else {
-              MMKV.set("appData", "-1")
-            }
-          }
-          else if(message.content.type === "ver-otp"){
-            let data = JSON.parse(message.content.message)
-            console.log(data)
+          } else if (message.content.type === 'ver-otp') {
+            let data = JSON.parse(message.content.message);
+            console.log(data);
             if (data.status === true) {
-              ToastAndroid.show("OTP Verified successfully", ToastAndroid.SHORT)
+              ToastAndroid.show(
+                'OTP Verified successfully',
+                ToastAndroid.SHORT,
+              );
               // fiddle(taskId)
-              history.push('/home')
-            }
-            else {
-              MMKV.set("appData", "-1")
+              history.push('/home');
+            } else {
+              MMKV.set('appData', '-1');
             }
           }
         }
@@ -147,15 +146,12 @@ export default function App() {
         //if(message.content.time)
         if (message.content.type === 'login') {
           loginHandler(JSON.parse(message.content.message));
-        }
-        else if (message.content.type === "register-soch") {
-          registerHandler(JSON.parse(message.content.message))
-        }
-        else if (message.content.type === "req-otp") {
-          otpRequestHandler(JSON.parse(message.content.message))
-        }
-        else if (message.content.type === "ver-otp") {
-          otpSubmitHandler(JSON.parse(message.content.message))
+        } else if (message.content.type === 'register-soch') {
+          registerHandler(JSON.parse(message.content.message));
+        } else if (message.content.type === 'req-otp') {
+          otpRequestHandler(JSON.parse(message.content.message));
+        } else if (message.content.type === 'ver-otp') {
+          otpSubmitHandler(JSON.parse(message.content.message));
         }
       },
     );
@@ -237,7 +233,6 @@ export default function App() {
     );
   };
 
-
   let initBrdg = () => {
     function doInitBrdg() {
       RNBridgefy.init(BRDG_LICENSE_KEY)
@@ -283,7 +278,7 @@ export default function App() {
     }
 
     var message = {
-      content: { type: type, message: mesaage, time: Date.now(), uuid: uuid },
+      content: {type: type, message: mesaage, time: Date.now(), uuid: uuid},
     };
 
     RNBridgefy.sendBroadcastMessage(message);
@@ -301,7 +296,7 @@ export default function App() {
     }
 
     var message = {
-      content: { type: type, message: mesaage, time: Date.now(), uuid: uuid },
+      content: {type: type, message: mesaage, time: Date.now(), uuid: uuid},
       receiver_id: originaluuid,
     };
     RNBridgefy.sendMessage(message);
@@ -319,29 +314,29 @@ export default function App() {
   };
 
   let loginHandler = async (data: Object) => {
-    if (await checkInternet() == true) {
-      console.log("online")
+    if ((await checkInternet()) == true) {
+      console.log('online');
       const payload = {
         username: data.username,
-        password: data.password
-      }
-      const stat = await login(payload)
-      if (sha256(data.username) === sha256(MMKV.getString("number"))) {
+        password: data.password,
+      };
+      const stat = await login(payload);
+      if (sha256(data.username) === sha256(MMKV.getString('number'))) {
         if (stat !== false) {
           MMKV.set('token', stat);
-          return { status: 'true' };
-        } else return { status: 'false' };
+          return {status: 'true'};
+        } else return {status: 'false'};
       } else {
         if (stat !== false) {
           OnSendMessage(
-            JSON.stringify({ status: true, token: stat }),
+            JSON.stringify({status: true, token: stat}),
             'login',
             MMKV.getString('uuid'),
             data.uuid,
           );
         } else {
           OnSendMessage(
-            JSON.stringify({ status: false }),
+            JSON.stringify({status: false}),
             'login',
             MMKV.getString('uuid'),
             data.uuid,
@@ -351,78 +346,101 @@ export default function App() {
     } else {
       console.log('offline');
       onSendBroadcast(JSON.stringify(data), 'login', data.uuid);
-      return { status: 'pending' };
+      return {status: 'pending'};
     }
   };
 
   let registerHandler = async (data: Object) => {
-    if (await checkInternet() == true) {
-      console.log("online")
+    if ((await checkInternet()) == true) {
+      console.log('online');
       const payload = {
         username: data.username,
         password: data.password,
-        password2: data.password2
-      }
-      const stat = await register(payload)
-      if (sha256(data.username) === sha256(MMKV.getString("number"))) {
+        password2: data.password2,
+      };
+      const stat = await register(payload);
+      if (sha256(data.username) === sha256(MMKV.getString('number'))) {
         if (stat !== false) {
           MMKV.set('token', stat);
-          return { status: 'true' };
-        } else return { status: 'false' };
+          return {status: 'true'};
+        } else return {status: 'false'};
       } else {
         if (stat !== false) {
-          OnSendMessage(JSON.stringify({ status: true, token: stat }), "register-soch", MMKV.getString("uuid"), data.uuid)
-        }
-        else {
-          OnSendMessage(JSON.stringify({ status: false }), "register-soch", MMKV.getString("uuid"), data.uuid)
+          OnSendMessage(
+            JSON.stringify({status: true, token: stat}),
+            'register-soch',
+            MMKV.getString('uuid'),
+            data.uuid,
+          );
+        } else {
+          OnSendMessage(
+            JSON.stringify({status: false}),
+            'register-soch',
+            MMKV.getString('uuid'),
+            data.uuid,
+          );
         }
       }
     } else {
-      console.log("offline")
-      onSendBroadcast(JSON.stringify(data), "register-soch", data.uuid)
-      return { status: 'pending' }
+      console.log('offline');
+      onSendBroadcast(JSON.stringify(data), 'register-soch', data.uuid);
+      return {status: 'pending'};
     }
   };
 
   let otpRequestHandler = async (data: Object) => {
-    if (await checkInternet() == true) {
-      console.log("online")
-      const stat = await requestOTP(data.refid)
-      if (data.refid === sha256(MMKV.getString("number"))) {
+    if ((await checkInternet()) == true) {
+      console.log('online');
+      const stat = await requestOTP(data.refid);
+      if (data.refid === sha256(MMKV.getString('number'))) {
         if (stat !== false) {
-          return { status: 'true' };
-        } else return { status: 'false' };
+          return {status: 'true'};
+        } else return {status: 'false'};
       } else {
         if (stat !== false) {
-          OnSendMessage(JSON.stringify({ status: true }), "req-otp", MMKV.getString("uuid"), data.uuid)
-        }
-        else {
-          OnSendMessage(JSON.stringify({ status: false }), "req-otp", MMKV.getString("uuid"), data.uuid)
+          OnSendMessage(
+            JSON.stringify({status: true}),
+            'req-otp',
+            MMKV.getString('uuid'),
+            data.uuid,
+          );
+        } else {
+          OnSendMessage(
+            JSON.stringify({status: false}),
+            'req-otp',
+            MMKV.getString('uuid'),
+            data.uuid,
+          );
         }
       }
     } else {
-      console.log("offline")
-      onSendBroadcast(JSON.stringify(data), "req-otp", data.uuid)
-      return { status: 'pending' }
+      console.log('offline');
+      onSendBroadcast(JSON.stringify(data), 'req-otp', data.uuid);
+      return {status: 'pending'};
     }
   };
 
   let otpSubmitHandler = async (data: Object) => {
-    if (await checkInternet() == true) {
-      console.log("online")
+    if ((await checkInternet()) == true) {
+      console.log('online');
       const payload = {
-        otp : data.otp
-      }
-      const stat = await verifyOTP(data.refid,payload)
-      if (data.refid === sha256(MMKV.getString("number"))) {
+        otp: data.otp,
+      };
+      const stat = await verifyOTP(data.refid, payload);
+      if (data.refid === sha256(MMKV.getString('number'))) {
         return stat;
       } else {
-          OnSendMessage(JSON.stringify(stat), "ver-otp", MMKV.getString("uuid"), data.uuid)
+        OnSendMessage(
+          JSON.stringify(stat),
+          'ver-otp',
+          MMKV.getString('uuid'),
+          data.uuid,
+        );
       }
     } else {
-      console.log("offline")
-      onSendBroadcast(JSON.stringify(data), "ver-otp", data.uuid)
-      return { status: 'pending' }
+      console.log('offline');
+      onSendBroadcast(JSON.stringify(data), 'ver-otp', data.uuid);
+      return {status: 'pending'};
     }
   };
 
@@ -442,9 +460,34 @@ export default function App() {
     <NativeRouter>
       <View style={styles.container}>
         <Switch>
-          <Route exact path="/" render={props => <Login loginHandler={loginHandler} />} />
-          <Route exact path="/register" render={props => <Register registerHandler={registerHandler} />} />
-          <Route exact path="/otp" render={props=> <OTP otpRequestHandler={otpRequestHandler} otpSubmitHandler={otpSubmitHandler} />} />
+          <Route exact path="/" render={(props) => <Home />} />
+          <Route
+            exact
+            path="/login"
+            render={(props) => <Login loginHandler={loginHandler} />}
+          />
+          <Route
+            exact
+            path="/register"
+            render={(props) => <Register registerHandler={registerHandler} />}
+          />
+          <Route
+            exact
+            path="/otp"
+            render={(props) => (
+              <OTP
+                otpRequestHandler={otpRequestHandler}
+                otpSubmitHandler={otpSubmitHandler}
+              />
+            )}
+          />
+          <Route exact path="/centres" render={(props) => <Centres />} />
+          <Route
+            exact
+            path="/beneficiary"
+            render={(props) => <AddBeneficiary />}
+          />
+          <Route exact path="/book" render={(props) => <BookSlot />} />
         </Switch>
       </View>
     </NativeRouter>
