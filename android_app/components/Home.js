@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
-import { MMKV } from 'react-native-mmkv';
+import React, {useEffect, useState} from 'react';
+import {View, StyleSheet, Text, TouchableOpacity} from 'react-native';
+import {ScrollView} from 'react-native-gesture-handler';
+import {MMKV} from 'react-native-mmkv';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import { useHistory } from 'react-router-native';
+import {useHistory} from 'react-router-native';
 
 const Home = () => {
   useEffect(() => {
@@ -17,7 +17,7 @@ const Home = () => {
   const showBeneficiary = MMKV.getString('beneficiary') != undefined;
   const showBooking = MMKV.getString('booking') != undefined;
 
-  const gender = ["", "Male", "Female", "Others"]
+  const gender = ['', 'Male', 'Female', 'Others'];
   return (
     <>
       <View style={styles.header}>
@@ -28,18 +28,32 @@ const Home = () => {
           <Icon name="search" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
-      <ScrollView style={{ padding: 15 }}>
+      <ScrollView style={{padding: 15}}>
         <View>
-          <Text style={{ color: '#fff', fontSize: 18, marginBottom: 5 }}>
+          <Text style={{color: '#fff', fontSize: 18, marginBottom: 5}}>
             BENEFICIARY INFO
           </Text>
           {showBeneficiary ? (
             <View style={styles.card}>
-              <Text style={styles.title}>NAME:  {JSON.parse(MMKV.getString('beneficiary')).name}</Text>
-              <Text style={styles.address}>BIRTH YEAR: {JSON.parse(MMKV.getString('beneficiary')).birth_year}</Text>
-              <Text style={styles.address}>ID NUMBER: {JSON.parse(MMKV.getString('beneficiary')).photo_id_number}</Text>
-              <Text style={styles.address}>BENEFICIARY ID: {JSON.parse(MMKV.getString('beneficiary')).beneficiary_id}</Text>
-              <Text style={styles.time}>GENDER: {gender[JSON.parse(MMKV.getString('beneficiary')).gender_id]}</Text>
+              <Text style={styles.title}>
+                NAME: {JSON.parse(MMKV.getString('beneficiary')).name}
+              </Text>
+              <Text style={styles.address}>
+                BIRTH YEAR:{' '}
+                {JSON.parse(MMKV.getString('beneficiary')).birth_year}
+              </Text>
+              <Text style={styles.address}>
+                ID NUMBER:{' '}
+                {JSON.parse(MMKV.getString('beneficiary')).photo_id_number}
+              </Text>
+              <Text style={styles.address}>
+                BENEFICIARY ID:{' '}
+                {JSON.parse(MMKV.getString('beneficiary')).beneficiary_id}
+              </Text>
+              <Text style={styles.time}>
+                GENDER:{' '}
+                {gender[JSON.parse(MMKV.getString('beneficiary')).gender_id]}
+              </Text>
             </View>
           ) : (
             <>
@@ -55,8 +69,8 @@ const Home = () => {
               <TouchableOpacity
                 onPress={() => history.push('/beneficiary')}
                 style={styles.addBtn}>
-                <Text style={{ color: '#fff', marginRight: 10, fontSize: 16 }}>
-                  ADD BENIFICIARY
+                <Text style={{color: '#fff', marginRight: 10, fontSize: 16}}>
+                  ADD BENEFICIARY
                 </Text>
                 <Icon name="plus-circle" size={25} color="#fff" />
               </TouchableOpacity>
@@ -73,25 +87,36 @@ const Home = () => {
             }}>
             BOOKED SLOT
           </Text>
-          {showBooking?
-            (<View style={styles.card}>
-              <Text style={styles.title}>CENTRE NAME: {JSON.parse(MMKV.getString('booking')).hospital_name}</Text>
-              <Text style={styles.address}>Vaccine: {JSON.parse(MMKV.getString('booking')).vaccine}</Text>
-              <Text style={styles.address}>ADDRESS: {JSON.parse(MMKV.getString('booking')).address}</Text>
-              <Text style={styles.time}>DOSE: {JSON.parse(MMKV.getString('booking')).dose}</Text>
-              <Text style={styles.time}>SLOT: {JSON.parse(MMKV.getString('booking')).slot}</Text>
-            </View>
-            ) : (
-              <Text
-                style={{
-                  color: '#fff',
-                  textAlign: 'center',
-                  marginTop: 15,
-                  fontSize: 15,
-                }}>
-                No slots booked
+          {showBooking ? (
+            <View style={styles.card}>
+              <Text style={styles.title}>
+                CENTRE NAME:{' '}
+                {JSON.parse(MMKV.getString('booking')).hospital_name}
               </Text>
-            )}
+              <Text style={styles.address}>
+                Vaccine: {JSON.parse(MMKV.getString('booking')).vaccine}
+              </Text>
+              <Text style={styles.address}>
+                ADDRESS: {JSON.parse(MMKV.getString('booking')).address}
+              </Text>
+              <Text style={styles.time}>
+                DOSE: {JSON.parse(MMKV.getString('booking')).dose}
+              </Text>
+              <Text style={styles.time}>
+                SLOT: {JSON.parse(MMKV.getString('booking')).slot}
+              </Text>
+            </View>
+          ) : (
+            <Text
+              style={{
+                color: '#fff',
+                textAlign: 'center',
+                marginTop: 15,
+                fontSize: 15,
+              }}>
+              No slots booked
+            </Text>
+          )}
         </View>
       </ScrollView>
     </>
@@ -130,8 +155,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
   },
-  address: { color: '#fff' },
-  time: { marginTop: 10, color: '#9F9EEC' },
+  address: {color: '#fff'},
+  time: {marginTop: 10, color: '#9F9EEC'},
   addBtn: {
     padding: 12,
     // flex: 1,
