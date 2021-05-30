@@ -60,6 +60,8 @@ const Login = ({ loginHandler }) => {
           return;
         }
       }, 200);
+    }else{
+      history.push("/otp")
     }
 
 

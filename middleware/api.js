@@ -10,9 +10,7 @@ export const register = async (data) => {
       },
     });
     console.log('api response', res.data);
-    MMKV.set('token', res.data.token);
-
-    return true;
+    return res.data.token;
   } catch (error) {
     console.log(error);
     return false;
@@ -35,31 +33,38 @@ export const login = async (data) => {
   }
 };
 
-export const requestOTP = async (token) => {
+export const requestOTP = async (refId) => {
   try {
     const res = await axios.get(`${BACKEND_URL}api/requestOTP/`, {
       headers: {
         'Content-Type': 'application/json',
-        Authorization: token,
+        'Authorization': "Token "+ MMKV.getString("token"),
+        'Referrer-Id': refId
       },
     });
-    return;
+    console.log(res.status)
+    if(res.status===200)
+    return true
+    else return false
   } catch (error) {
     console.log(error);
+    return false;
   }
 };
 
-export const verifyOTP = async (data, token) => {
+export const verifyOTP = async (refid, data) => {
   try {
     const res = await axios.post(`${BACKEND_URL}api/submitotp/`, data, {
       headers: {
         'Content-Type': 'application/json',
-        Authorization: token,
+        'Authorization': "Token "+MMKV.getString("token"),
+        'Referrer-Id': refid
       },
     });
-    return true;
+    return { status: true, taskId: res.data.taskId}
   } catch (error) {
     console.log(error);
+    return {status: false}
   }
 };
 
