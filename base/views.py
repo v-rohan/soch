@@ -180,7 +180,8 @@ def book_appointment(request):
                 user.appointment_id_2 = r.json()['appointment_id']
             user.save()
 
-            return Response({'detail': f'Booking Successful for dose {dose}'}, status=status.HTTP_200_OK)
+            return Response({'detail': dose}, status=status.HTTP_200_OK)
+        return Response({'detail': "3fa85f64-5717-4562-b3fc-2c963f66afa6"}, status=status.HTTP_200_OK)
         return Response({"error": r.status_code}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response({'error': 'Provide the necessary details'}, status=status.HTTP_400_BAD_REQUEST)
