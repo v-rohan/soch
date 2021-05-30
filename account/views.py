@@ -42,7 +42,7 @@ def registration_view(request):
 @permission_classes((IsAuthenticated,))
 def request_otp(request):
     number = request.user.username
-    url = f"{AAROGRA_SETU_API}/v2/auth/public/generateOTP"
+    url = f"{AAROGRA_SETU_API}/v2/auth/generateOTP"
     r = requests.post(url, headers=headers,
                       data=json.dumps({'mobile': number}))
 
@@ -70,7 +70,7 @@ def submit_otp(request):
             'txnId': user_data.txnId,
             'otp': hashlib.sha256(otp.encode()).hexdigest()
         }
-        url = f'{AAROGRA_SETU_API}/v2/auth/public/confirmOTP'
+        url = f'{AAROGRA_SETU_API}/v2/auth/confirmOTP'
         r = requests.post(url, headers=headers, data=json.dumps(data))
         if r.status_code == 200:
             user_data.token = r.json()['token']
