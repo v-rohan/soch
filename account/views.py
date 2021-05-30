@@ -53,26 +53,10 @@ def request_otp(request):
             usrdata.txnId = txnId
         except:
             usrdata = CowinData(user=request.user, txnId=txnId)
-        usrdata.expiration_time = timezone.now() + datetime.timedelta(minutes=3)
+        # usrdata.expiration_time = timezone.now() + datetime.timedelta(minutes=3)
         usrdata.save()
         return Response({"detail": "Pls enter the OTP"}, status=status.HTTP_200_OK)
     return Response({"error": f"Error: {r.status_code}"})
-
-
-def get_token(otp, user):
-    if user and otp:
-        usrdata = CowinData.objects.get(user=user)
-        data = {
-            'txnId': usrdata.txnId,
-            'otp': hashlib.sha256(otp.encode()).hexdigest()
-        }
-        r = requests.post(
-            f'{AAROGRA_SETU_API}/v2/auth/public/confirmOTP', data=json.dumps(data))
-        if r.status_code == 200:
-            usrdata.token = r.json()['token']
-            usrdata.save()
-            return Response({"detail": "OTP verification successful"}, status=status.HTTP_200_OK)
-        return Response({"error": "Incorrect OTP provided. Try again"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -81,9 +65,18 @@ def submit_otp(request):
     otp = request.data.get('otp')
     if otp:
         user_data = CowinData.objects.get(user=request.user)
-        if user_data.expiration_time > timezone.now():
-            get_token(otp, request.user)
-        return Response({"error": "OTP Expired, regenerate OTP"}, status=status.HTTP_401_UNAUTHORIZED)
+        # if user_data.expiration_time > timezone.now():
+        data = {
+            'txnId': user_data.txnId,
+            'otp': hashlib.sha256(otp.encode()).hexdigest()
+        }
+        r = requests.post(
+            f'{AAROGRA_SETU_API}/v2/auth/public/confirmOTP', data=json.dumps(data))
+        if r.status_code == 200:
+            user_data.token = r.json()['token']
+            user_data.save()
+            return Response({"detail": "OTP verification successful"}, status=status.HTTP_200_OK)
+        return Response({"error": f"{r.status_code}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return Response({"error": "OTP not provided"}, status=status.HTTP_400_BAD_REQUEST)
 
 
