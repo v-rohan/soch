@@ -96,6 +96,7 @@ const Centres = () => {
               placeholder="6 digit pincode"
               placeholderTextColor="#fff"
               style={styles.input}
+              keyboardType="number-pad"
             />
             <View style={{flexDirection: 'row', marginTop: 20}}>
               <TouchableOpacity
