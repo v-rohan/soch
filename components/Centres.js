@@ -6,55 +6,24 @@ import {
   TextInput,
   TouchableOpacity,
   FlatList,
+  Alert,
   Platform,
 } from 'react-native';
 
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import VC_Card from './VC_Card';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { sha256 } from 'js-sha256';
+import { MMKV } from 'react-native-mmkv';
 
-const DATA = [
-  {
-    id: 1,
-    name: 'VACCINATION CENTRE 1',
-    address1: 'Address line 1',
-    address2: 'Address line 2',
-    time: 'Time',
-  },
-  {
-    id: 2,
-    name: 'VACCINATION CENTRE 2',
-    address1: 'Address line 1',
-    address2: 'Address line 2',
-    time: 'Time',
-  },
-  {
-    id: 3,
-    name: 'VACCINATION CENTRE 3',
-    address1: 'Address line 1',
-    address2: 'Address line 2',
-    time: 'Time',
-  },
-  {
-    id: 4,
-    name: 'VACCINATION CENTRE 4',
-    address1: 'Address line 1',
-    address2: 'Address line 2',
-    time: 'Time',
-  },
-  {
-    id: 5,
-    name: 'VACCINATION CENTRE 5',
-    address1: 'Address line 1',
-    address2: 'Address line 2',
-    time: 'Time',
-  },
-];
 
-const Centres = () => {
+
+const Centres = ({ searchHandler }) => {
   const [date, setDate] = React.useState(new Date());
   const [mode, setMode] = React.useState('date');
   const [show, setShow] = React.useState(false);
+  const [pincode, setPincode] = React.useState(null)
+  const [DATA, setData] = React.useState([])
 
   const onChange = (event, selectedDate) => {
     const currentDate = selectedDate || date;
@@ -75,15 +44,57 @@ const Centres = () => {
     showMode('time');
   };
 
-  const renderItem = ({item}) => {
+  const renderItem = ({ item }) => {
     return (
       <VC_Card
         name={item.name}
-        address1={item.address1}
-        address2={item.address2}
-        time={item.time}
+        address1={item.address}
+        address2={item.district_name +" "+item.state_name}
+        fee={item.fee_type+" - "+item.fee}
+        metadata={item}
       />
     );
+  };
+  const onPressHandler = async () => {
+    const data = {
+      refid: sha256(MMKV.getString("number")),
+      uuid: MMKV.getString("uuid"),
+      pincode: pincode,
+      date: date.toISOString().substr(0,10)
+
+    };
+    MMKV.set("currentAction", "search")
+    console.log(data);
+    const done = await searchHandler(data)
+    console.log(done)
+    if (done.status == 'false' || done.status == false) {
+      Alert.alert("Error in Centre search. Try again later")
+    }
+    else if (done.status == 'pending') {
+      var startTime = new Date().getTime();
+      var interval = setInterval(function () {
+        if (new Date().getTime() - startTime > 180000) {
+          clearInterval(interval);
+          Alert.alert("Request Timed Out. No devices nearby")
+          return;
+        }
+        if (MMKV.getString("appData") === '-1') {
+          clearInterval(interval);
+          Alert.alert("Error in Centre search. Try again later")
+          return;
+        } if (JSON.parse(MMKV.getString("appData")).status === true) {
+          setData(JSON.parse(MMKV.getString("appData")).sessions) //= JSON.parse(MMKV.getString("appData")).beneficiary_id
+          clearInterval(interval);
+          //history.push('/')
+          return;
+        }
+      }, 200);
+    } else {
+      console.log(done.sessions)
+      setData(done.sessions)
+    }
+
+
   };
 
   return (
@@ -91,17 +102,19 @@ const Centres = () => {
       <View style={styles.header}>
         <Text style={styles.text}>VACCINATION CENTRES</Text>
         <View style={styles.inputContainer}>
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
             <TextInput
               placeholder="6 digit pincode"
               placeholderTextColor="#fff"
+              value={pincode}
+              onChangeText={(text) => setPincode(text)}
               style={styles.input}
               keyboardType="number-pad"
             />
-            <View style={{flexDirection: 'row', marginTop: 20}}>
+            <View style={{ flexDirection: 'row', marginTop: 20 }}>
               <TouchableOpacity
                 onPress={showDatepicker}
-                style={[styles.search, {marginRight: 10, marginLeft: 0}]}>
+                style={[styles.search, { marginRight: 10, marginLeft: 0 }]}>
                 <Icon name="calendar-alt" size={20} color="#fff" />
               </TouchableOpacity>
               {show && (
@@ -133,18 +146,18 @@ const Centres = () => {
               </View>
             </View>
           </View>
-          <View style={{justifyContent: 'center'}}>
-            <TouchableOpacity style={styles.search}>
+          <View style={{ justifyContent: 'center' }}>
+            <TouchableOpacity onPress={onPressHandler} style={styles.search}>
               <Icon name="arrow-circle-right" size={25} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
       </View>
-      <View style={{flex: 1}}>
+      <View style={{ flex: 1 }}>
         <FlatList
           data={DATA}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.session_id.toString()}
         />
       </View>
     </>

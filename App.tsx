@@ -15,11 +15,11 @@ import {
 } from 'react-native';
 import { API_KEY } from '@env';
 import { MMKV } from 'react-native-mmkv';
-import { addBenificiary, login, register, requestOTP, verifyOTP } from "./middleware/api"
+import { addBenificiary, getSlotsByPin, login, register, bookSlot, requestOTP, verifyOTP } from "./middleware/api"
 import 'react-native-get-random-values';
 import 'react-native-get-random-values';
-import {sha256} from 'js-sha256';
-import {v4 as uuid} from 'uuid';
+import { sha256 } from 'js-sha256';
+import { v4 as uuid } from 'uuid';
 import {
   NativeRouter,
   Switch,
@@ -156,6 +156,31 @@ export default function App() {
             } else {
               MMKV.set('appData', '-1');
             }
+          } else if (message.content.type === 'search') {
+            let data = JSON.parse(message.content.message);
+            console.log(data);
+            if (data.status === true) {
+              ToastAndroid.show(
+                'Found slots successfully',
+                ToastAndroid.SHORT,
+              );
+              // fiddle(taskId)
+              MMKV.set('appData', message.content.message)
+            } else {
+              MMKV.set('appData', '-1');
+            }
+          }else if (message.content.type === 'book') {
+            let data = JSON.parse(message.content.message);
+            console.log(data);
+            if (data.status === true) {
+              ToastAndroid.show(
+                'Booked slot successfully',
+                ToastAndroid.SHORT,
+              );
+              MMKV.set('appData', message.content.message)
+            } else {
+              MMKV.set('appData', '-1');
+            }
           }
         }
       },
@@ -178,6 +203,10 @@ export default function App() {
           otpSubmitHandler(JSON.parse(message.content.message));
         } else if (message.content.type === 'add-ben') {
           beneficiaryRegHandler(JSON.parse(message.content.message));
+        } else if (message.content.type === 'search') {
+          searchHandler(JSON.parse(message.content.message));
+        } else if (message.content.type === 'book') {
+          bookingHandler(JSON.parse(message.content.message));
         }
       },
     );
@@ -501,6 +530,58 @@ export default function App() {
     }
   };
 
+  let searchHandler = async (data: Object) => {
+    if ((await checkInternet()) == true) {
+      console.log('online');
+      const payload = {
+        pincode: data.pincode,
+        date: data.date,
+        calendar: false
+      };
+      const stat = await getSlotsByPin(payload, data.refid);
+      if (data.refid === sha256(MMKV.getString('number'))) {
+        return stat;
+      } else {
+        OnSendMessage(
+          JSON.stringify(stat),
+          'search',
+          MMKV.getString('uuid'),
+          data.uuid
+        );
+      }
+    } else {
+      console.log('offline');
+      onSendBroadcast(JSON.stringify(data), 'search', data.uuid);
+      return { status: 'pending' };
+    }
+  }
+  let bookingHandler = async (data: Object) => {
+    if ((await checkInternet()) == true) {
+      console.log('online');
+      const payload = {
+        dose: data.dose,
+        session_id: data.session_id,
+        slot: data.slot
+      };
+      const stat = await bookSlot(payload, data.refid);
+      if (data.refid === sha256(MMKV.getString('number'))) {
+        return stat;
+      } else {
+        OnSendMessage(
+          JSON.stringify(stat),
+          'book',
+          MMKV.getString('uuid'),
+          data.uuid
+        );
+      }
+    } else {
+      console.log('offline');
+      onSendBroadcast(JSON.stringify(data), 'book', data.uuid);
+      return { status: 'pending' };
+    }
+  }
+
+
   useEffect(() => {
     initListeners();
     initBrdg();
@@ -539,13 +620,13 @@ export default function App() {
                 />
               )}
             />
-            <Route exact path="/centres" render={(props) => <Centres />} />
+            <Route exact path="/centres" render={(props) => <Centres searchHandler={searchHandler}/>} />
             <Route
               exact
               path="/beneficiary"
               render={(props) => <AddBeneficiary beneficiaryRegHandler={beneficiaryRegHandler} />}
             />
-            <Route exact path="/book" render={(props) => <BookSlot />} />
+            <Route exact path="/book" render={(props) => <BookSlot bookingHandler={bookingHandler}/>} />
           </Switch>
         </View>
       </BackButton>

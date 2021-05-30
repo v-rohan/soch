@@ -85,38 +85,44 @@ export const verifyOTP = async (refid, data) => {
   }
 };
 
-export const getSlotsByPin = async (data, token) => {
+export const getSlotsByPin = async (data, refid) => {
   try {
     const res = await axios.post(
-      `${BACKEND_URL}api/base/appts/getByPin/`,
+      `${BACKEND_URL}api/base/appts/getByPinDummy/`,
       data,
       {
         headers: {
           'Content-Type': 'application/json',
-          Authorization: token,
+          'Authorization': "Token " + MMKV.getString("token"),
+          'Referrer-Id': refid
         },
       },
     );
-    return res.data;
+    //  console.log(res.data)
+    return { status: true, taskId: res.data.taskId, sessions: JSON.parse(res.data.detail).sessions }
   } catch (error) {
     console.log(error);
+    return { status: false }
   }
 };
 
-export const getCalendarByCenter = async (data, token) => {
+export const bookSlot = async (data, refid) => {
   try {
     const res = await axios.post(
-      `${BACKEND_URL}api/base/appts/getCalendarByCenter`,
+      `${BACKEND_URL}api/base/book-dummy/`,
       data,
       {
         headers: {
           'Content-Type': 'application/json',
-          Authorization: token,
+          'Authorization': "Token " + MMKV.getString("token"),
+          'Referrer-Id': refid
         },
       },
     );
-    return res.data;
+    console.log(res.data)
+    return { status: true, taskId: res.data.taskId, booking: JSON.parse(res.data.detail).appointment_id }
   } catch (error) {
     console.log(error);
+    return { status: false }
   }
 };
