@@ -13,6 +13,11 @@ const Home = () => {
     <>
       <View style={styles.header}>
         <Text style={styles.text}>HOME</Text>
+        <TouchableOpacity
+          onPress={() => history.push('/centres')}
+          style={styles.search}>
+          <Icon name="search" size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
       <ScrollView style={{padding: 15}}>
         <View>
@@ -39,7 +44,7 @@ const Home = () => {
               </Text>
               <TouchableOpacity
                 onPress={() => history.push('/beneficiary')}
-                style={styles.search}>
+                style={styles.addBtn}>
                 <Text style={{color: '#fff', marginRight: 10, fontSize: 16}}>
                   ADD BENIFICIARY
                 </Text>
@@ -89,6 +94,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#2D2D39',
     borderBottomLeftRadius: 15,
     borderBottomRightRadius: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   text: {
     // textAlign: 'center',
@@ -113,7 +121,7 @@ const styles = StyleSheet.create({
   },
   address: {color: '#fff'},
   time: {marginTop: 10, color: '#9F9EEC'},
-  search: {
+  addBtn: {
     padding: 12,
     // flex: 1,
     justifyContent: 'center',
@@ -123,6 +131,12 @@ const styles = StyleSheet.create({
     // padding: 15,
     backgroundColor: '#5F5DDF',
     // marginLeft: 10,
+    borderRadius: 15,
+  },
+  search: {
+    padding: 15,
+    backgroundColor: '#1C1C1E',
+    marginLeft: 20,
     borderRadius: 15,
   },
 });
