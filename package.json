@@ -20,10 +20,10 @@
     "react-native": "0.63.4",
     "react-native-bridgefy": "^2.0.1",
     "react-native-dotenv": "^2.5.5",
-    "react-native-dropdown-picker": "^5.1.19",
     "react-native-gesture-handler": "^1.10.3",
     "react-native-get-random-values": "^1.5.1",
     "react-native-mmkv": "^1.1.6",
+    "react-native-simple-radio-button": "^2.7.4",
     "react-native-vector-icons": "^8.1.0",
     "react-router-native": "^5.2.0",
     "uuid": "^8.3.2"
