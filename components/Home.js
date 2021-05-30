@@ -6,11 +6,13 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useHistory } from "react-router-native"
 
 const Home = () => {
-  const history = useHistory();
   useEffect(() => {
     if (MMKV.getString("token") === undefined || MMKV.getString("number") === undefined)
       history.replace('/login')
   })
+  let history = useHistory();
+  const showBeneficiary = MMKV.getString('beneficiary') != null;
+  const showBooking = MMKV.getString('booking') != null;
   return (
     <>
       <View style={styles.header}>
@@ -21,18 +23,34 @@ const Home = () => {
           <Text style={{ color: '#fff', fontSize: 18, marginBottom: 5 }}>
             BENEFICIARY INFO
           </Text>
-          <View style={styles.card}>
-            <Text style={styles.title}>NAME</Text>
-            <Text style={styles.address}>BIRTH YEAR</Text>
-            <Text style={styles.address}>ID NUMBER</Text>
-            <Text style={styles.time}>GENDER</Text>
-          </View>
-          <TouchableOpacity onPress={() => history.push('/beneficiary')} style={styles.search}>
-            <Text style={{ color: '#fff', marginRight: 10, fontSize: 16 }}>
-              ADD BENIFICIARY
-            </Text>
-            <Icon name="plus-circle" size={25} color="#fff" />
-          </TouchableOpacity>
+          {showBeneficiary ? (
+            <View style={styles.card}>
+              <Text style={styles.title}>NAME</Text>
+              <Text style={styles.address}>BIRTH YEAR</Text>
+              <Text style={styles.address}>ID NUMBER</Text>
+              <Text style={styles.time}>GENDER</Text>
+            </View>
+          ) : (
+            <>
+              <Text
+                style={{
+                  color: '#fff',
+                  textAlign: 'center',
+                  marginTop: 15,
+                  fontSize: 15,
+                }}>
+                No beneficiary added
+              </Text>
+              <TouchableOpacity
+                onPress={() => history.push('/beneficiary')}
+                style={styles.search}>
+                <Text style={{color: '#fff', marginRight: 10, fontSize: 16}}>
+                  ADD BENIFICIARY
+                </Text>
+                <Icon name="plus-circle" size={25} color="#fff" />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
         <View>
           <Text
@@ -44,12 +62,24 @@ const Home = () => {
             }}>
             BOOKED SLOT
           </Text>
-          <View style={styles.card}>
-            <Text style={styles.title}>NAME</Text>
-            <Text style={styles.address}>SLOT</Text>
-            <Text style={styles.address}>ADDRESS</Text>
-            <Text style={styles.time}>DOSE</Text>
-          </View>
+          {showBooking ? (
+            <View style={styles.card}>
+              <Text style={styles.title}>NAME</Text>
+              <Text style={styles.address}>SLOT</Text>
+              <Text style={styles.address}>ADDRESS</Text>
+              <Text style={styles.time}>DOSE</Text>
+            </View>
+          ) : (
+            <Text
+              style={{
+                color: '#fff',
+                textAlign: 'center',
+                marginTop: 15,
+                fontSize: 15,
+              }}>
+              No slots booked
+            </Text>
+          )}
         </View>
       </ScrollView>
     </>
